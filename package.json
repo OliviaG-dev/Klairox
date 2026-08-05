@@ -1,22 +1,58 @@
 {
-  "name": "@org/source",
+  "name": "@klairox/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "description": "Klairox - data-driven 2D asset composition framework",
+  "scripts": {
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "check": "nx run-many -t lint,typecheck,test,build",
+    "klairox": "node packages/cli/dist/bin.js",
+    "example:assets": "node tools/generate-example-assets.mjs",
+    "example:generate": "node packages/cli/dist/bin.js generate plugins/horse --out dist/assets",
+    "schema": "node tools/generate-plugin-schema.mjs"
+  },
   "private": true,
   "dependencies": {},
   "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@nx/eslint": "23.1.0",
+    "@nx/eslint-plugin": "23.1.0",
     "@nx/js": "23.1.0",
+    "@nx/vitest": "23.1.0",
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "~4.1.0",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^10.0.0",
+    "jsonc-eslint-parser": "^2.1.0",
     "nx": "23.1.0",
     "prettier": "^3.8.1",
     "tslib": "^2.3.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.58.0",
+    "verdaccio": "^6.3.2",
+    "vite": "^8.0.0",
+    "vitest": "~4.1.0"
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "local-registry": {
+        "executor": "@nx/js:verdaccio",
+        "options": {
+          "port": 4873,
+          "config": ".verdaccio/config.yml",
+          "storage": "tmp/local-registry/storage"
+        }
+      }
+    }
+  }
 }

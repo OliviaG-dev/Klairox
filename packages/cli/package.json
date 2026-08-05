@@ -1,0 +1,37 @@
+{
+  "name": "@klairox/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Command line interface for the Klairox asset composition engine",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "klairox": "./dist/bin.js"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@klairox/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "nx": {
+    "name": "cli",
+    "tags": [
+      "type:app"
+    ]
+  },
+  "dependencies": {
+    "@klairox/core": "^0.0.1",
+    "@klairox/plugin-sdk": "^0.0.1",
+    "@klairox/renderer": "^0.0.1",
+    "tslib": "^2.3.0"
+  }
+}

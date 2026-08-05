@@ -19,12 +19,14 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e"
+      # Task distribution and remote caching, only when the workspace is connected
+      # to Nx Cloud. Must run before dependencies are installed.
+      # https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
+        if: env.NX_CLOUD_ACCESS_TOKEN != ''
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
-      # Cache node_modules
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -32,9 +34,14 @@ jobs:
 
       - run: npm ci
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
+      - run: npx nx format:check
+      # Fails if a package.json dependency is missing from the TypeScript project references
+      - run: npx nx sync:check
+      - run: npx nx run-many -t lint typecheck test build
+
+      # Nx Cloud recommends fixes for failures to help you get CI green faster.
+      # https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
-        if: always()
+        if: always() && env.NX_CLOUD_ACCESS_TOKEN != ''
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}

@@ -1,0 +1,37 @@
+---
+description: Klairox ships two root READMEs. Any documentation change must update both, in the same task.
+globs: **/README*.md
+alwaysApply: false
+---
+
+# Bilingual README
+
+This repository has two root READMEs, kept strictly in sync:
+
+- `README.md` — English. GitHub renders this one on the repository home page.
+- `README.fr.md` — French translation, reached through the language links at the top.
+
+## Rule
+
+When asked to update, add to or fix the README, always apply the change to **both**
+files in the same task. The same applies in reverse: a change to `README.fr.md` must be
+mirrored in `README.md`. Never finish a task with one updated and the other stale.
+
+Do not ask whether the French version should be updated — it always should.
+
+## What to translate
+
+Translate prose, headings, table cells, image alt text and comments inside code blocks.
+
+Keep identical and in English:
+
+- code, commands and CLI output (`npm run klairox -- info plugins/horse`, `dependsOn`, layer and option ids)
+- package names, file paths, event names, npm scripts
+- badge URLs, versions and colours
+
+## Before finishing
+
+- Both files have the same sections, in the same order.
+- The language switcher line is intact: current language in bold, the other one linked.
+- The badge block is identical in both, apart from the `Licence`/`License` label.
+- `npx nx format:check` passes.

@@ -1,0 +1,128 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "horse",
+  "version": "1.0.0",
+  "title": "Horse",
+  "description": "Reference plugin: a layered horse assembled from placeholder artwork.",
+  "license": "MIT",
+  "canvas": {
+    "width": 512,
+    "height": 512
+  },
+  "layers": [
+    {
+      "id": "body",
+      "title": "Build",
+      "order": 10,
+      "required": true,
+      "options": [
+        {
+          "id": "standard",
+          "title": "Standard",
+          "asset": "layers/body/standard.png"
+        },
+        { "id": "heavy", "title": "Heavy", "asset": "layers/body/heavy.png" }
+      ]
+    },
+    {
+      "id": "coat",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 0.9,
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat/chestnut.png"
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat/grey.png",
+          "tags": ["light"]
+        }
+      ]
+    },
+    {
+      "id": "markings",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze",
+          "asset": "layers/markings/blaze.png"
+        },
+        { "id": "star", "title": "Star", "asset": "layers/markings/star.png" }
+      ]
+    },
+    {
+      "id": "mane",
+      "title": "Mane",
+      "order": 40,
+      "required": true,
+      "dependsOn": ["body"],
+      "options": [
+        { "id": "short", "title": "Short", "asset": "layers/mane/short.png" },
+        { "id": "long", "title": "Long", "asset": "layers/mane/long.png" }
+      ]
+    },
+    {
+      "id": "equipment",
+      "title": "Equipment",
+      "order": 50,
+      "options": [
+        {
+          "id": "saddle",
+          "title": "Saddle",
+          "asset": "layers/equipment/saddle.png"
+        },
+        {
+          "id": "armor",
+          "title": "Plate armour",
+          "asset": "layers/equipment/armor.png"
+        }
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "armor-hides-markings",
+      "description": "Plate armour covers the head, so face markings are not rendered",
+      "when": { "equipment": "armor" },
+      "hide": ["markings"]
+    },
+    {
+      "id": "grey-coat-hides-star",
+      "description": "A white star does not read against a grey coat",
+      "when": { "coat": "grey" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "heavy-build-blocks-saddle",
+      "description": "The heavy build needs a wider saddle, which this plugin does not ship yet",
+      "when": { "body": "heavy" },
+      "disable": ["equipment:saddle"]
+    }
+  ],
+  "exports": {
+    "formats": ["png", "webp"],
+    "thumbnail": { "width": 128 },
+    "metadata": true
+  }
+}

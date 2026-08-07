@@ -17,6 +17,7 @@ export function checkManifestIntegrity(
     ...checkDependencies(manifest, index),
     ...checkDependencyCycles(manifest),
     ...checkConstraints(manifest, index),
+    ...checkVariants(manifest, index),
   ];
 }
 
@@ -204,6 +205,84 @@ function checkTargets(
   }
 
   return issues;
+}
+
+function checkVariants(
+  manifest: PluginManifest,
+  index: ManifestIndex,
+): ManifestIssue[] {
+  if (manifest.variants === undefined) {
+    return [];
+  }
+
+  const { variants } = manifest;
+  const issues: ManifestIssue[] = [];
+  const seenAxes = new Set<string>();
+
+  variants.axes.forEach((axis, axisIndex) => {
+    const path = `variants.axes[${axisIndex}]`;
+
+    if (seenAxes.has(axis)) {
+      issues.push({ path, message: `duplicate axis "${axis}"` });
+      return;
+    }
+    seenAxes.add(axis);
+
+    if (!index.layers.has(axis)) {
+      issues.push({ path, message: `unknown layer "${axis}"` });
+    }
+  });
+
+  for (const [layerId, optionId] of Object.entries(variants.include)) {
+    const path = `variants.include.${layerId}`;
+
+    if (seenAxes.has(layerId)) {
+      issues.push({
+        path,
+        message: `layer "${layerId}" cannot appear in both axes and include`,
+      });
+      continue;
+    }
+
+    issues.push(...checkLayerOption(layerId, optionId, index, path));
+  }
+
+  variants.exclude.forEach((entry, entryIndex) => {
+    for (const [layerId, optionId] of Object.entries(entry)) {
+      issues.push(
+        ...checkLayerOption(
+          layerId,
+          optionId,
+          index,
+          `variants.exclude[${entryIndex}].${layerId}`,
+        ),
+      );
+    }
+  });
+
+  return issues;
+}
+
+function checkLayerOption(
+  layerId: string,
+  optionId: string,
+  index: ManifestIndex,
+  path: string,
+): ManifestIssue[] {
+  if (!index.layers.has(layerId)) {
+    return [{ path, message: `unknown layer "${layerId}"` }];
+  }
+
+  if (!index.optionsByLayer.get(layerId)?.has(optionId)) {
+    return [
+      {
+        path,
+        message: `unknown option "${optionId}" for layer "${layerId}"`,
+      },
+    ];
+  }
+
+  return [];
 }
 
 function dedupeIssues(issues: readonly ManifestIssue[]): ManifestIssue[] {

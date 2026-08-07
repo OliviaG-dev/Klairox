@@ -11,6 +11,8 @@ import type {
   pluginManifestSchema,
   selectorSchema,
   thumbnailSchema,
+  variantExcludeSchema,
+  variantsSchema,
 } from './manifest.schema.js';
 
 export type BlendMode = z.infer<typeof blendModeSchema>;
@@ -23,6 +25,8 @@ export type Constraint = z.infer<typeof constraintSchema>;
 export type ThumbnailConfig = z.infer<typeof thumbnailSchema>;
 export type ExportsConfig = z.infer<typeof exportsSchema>;
 export type CanvasConfig = z.infer<typeof canvasSchema>;
+export type VariantExclude = z.infer<typeof variantExcludeSchema>;
+export type VariantsConfig = z.infer<typeof variantsSchema>;
 
 /** A fully validated manifest, with every optional field resolved to its default. */
 export type PluginManifest = z.infer<typeof pluginManifestSchema>;

@@ -94,6 +94,8 @@ describe('exportComposition', () => {
       selection: { body: 'standard', coat: 'bay' },
       files: [{ kind: 'image', file: 'sample.png' }],
     });
+    expect(typeof metadata.planHash).toBe('string');
+    expect(metadata.planHash).toHaveLength(16);
   });
 
   it('wraps a renderer failure into a RENDER_FAILED error', async () => {

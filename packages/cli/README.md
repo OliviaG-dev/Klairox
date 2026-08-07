@@ -6,6 +6,7 @@ Command line interface for [Klairox](../../README.md).
 klairox info plugins/horse       # list layers, options and constraints
 klairox validate plugins/horse   # check the manifest and every declared asset
 klairox generate plugins/horse --select coat=bay --out dist/assets
+klairox batch plugins/horse --out dist/batch
 ```
 
 Run `klairox --help` for the full list of options.

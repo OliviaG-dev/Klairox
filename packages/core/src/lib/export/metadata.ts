@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { CanvasConfig } from '@klairox/plugin-sdk';
+import { hashCompositionPlan } from '../batch/plan-hash.js';
 import type { CompositionPlan } from '../composition/composition.types.js';
 import type { Selection } from '../selection/selection.types.js';
 import type { ExportedArtifact } from './export.types.js';
@@ -15,6 +16,8 @@ export interface AssetMetadata {
     readonly optionId: string;
   }[];
   readonly files: readonly { readonly kind: string; readonly file: string }[];
+  /** Fingerprint of the composition plan, used to skip unchanged batch work. */
+  readonly planHash: string;
 }
 
 /**
@@ -39,5 +42,6 @@ export function buildAssetMetadata(
       kind: artifact.kind,
       file: path.basename(artifact.filePath),
     })),
+    planHash: hashCompositionPlan(plan),
   };
 }

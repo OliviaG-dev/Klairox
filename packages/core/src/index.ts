@@ -1,3 +1,7 @@
+export * from './lib/batch/expand-variants.js';
+export * from './lib/batch/plan-hash.js';
+export * from './lib/batch/run-batch.js';
+export * from './lib/batch/variant-config.js';
 export * from './lib/composition/composition-engine.js';
 export * from './lib/composition/composition.types.js';
 export * from './lib/engine.js';

@@ -25,9 +25,10 @@ fonctionnel sans toucher au moteur.
 
 ![Quatre variantes de cheval générées depuis le même plugin](docs/images/horse-preview.png)
 
-_Quatre assets produits à partir d'un seul plugin et d'une seule commande. Les visuels sont
-volontairement schématiques : l'exemple embarque des formes placeholder pour que l'attention
-reste sur les règles de composition._
+_Quatre assets produits à partir d'un seul plugin. Avec `klairox batch`, le même plugin peut
+émettre toute une matrice de combinaisons. Les visuels sont volontairement schématiques :
+l'exemple embarque des formes placeholder pour que l'attention reste sur les règles de
+composition._
 
 ---
 
@@ -46,8 +47,9 @@ d'armes.
 
 ## État du projet
 
-Jeune mais fonctionnel. Le moteur, le système de règles et la CLI sont implémentés et testés de
-bout en bout. L'éditeur web n'est pas encore construit — voir la [roadmap](docs/roadmap.md).
+Jeune mais fonctionnel. Le moteur, le système de règles, les matrices de variantes et la CLI
+sont implémentés et testés de bout en bout. L'éditeur web n'est pas encore construit — voir la
+[roadmap](docs/roadmap.md).
 
 ## Démarrage rapide
 
@@ -100,6 +102,27 @@ Output
 Les couches que vous omettez sont complétées automatiquement : une couche obligatoire prend sa
 première option encore autorisée par les contraintes, une couche optionnelle reste vide.
 
+Générer toutes les combinaisons déclarées par la section `variants` du plugin :
+
+```bash
+npm run klairox -- batch plugins/horse --dry-run
+npm run klairox -- batch plugins/horse --out dist/batch
+```
+
+```
+horse v1.0.0 - batch via sharp
+
+Variants
+  axes       coat × equipment
+  planned    8
+  + horse-bay-saddle (generated)
+  + horse-bay-armor (generated)
+  …
+```
+
+`--dry-run` liste la matrice sans écrire de fichiers. Une seconde exécution saute les
+variantes inchangées tant que le sidecar de métadonnées est activé (le hash du plan y vit).
+
 ## À quoi ressemble un plugin
 
 Un plugin est un dossier contenant un manifeste et des images. Pas d'étape de build, pas de code.
@@ -144,6 +167,12 @@ plugins/horse/
     },
   ],
 
+  "variants": {
+    "axes": ["coat", "equipment"],
+    "include": { "body": "standard", "mane": "short" },
+    "name": "{plugin}-{coat}-{equipment}",
+  },
+
   "exports": {
     "formats": ["png", "webp"],
     "thumbnail": { "width": 128 },
@@ -151,13 +180,15 @@ plugins/horse/
 }
 ```
 
-Trois idées portent l'essentiel :
+Quatre idées portent l'essentiel :
 
 - **`dependsOn`** définit l'ordre de résolution : une couche aval est choisie alors que les
   choix amont sont déjà connus. **`order`** est distinct et gère l'empilement.
 - **`constraints`** réagissent à une sélection et peuvent désactiver une option (`disable`),
   masquer une couche (`hide`) ou imposer un autre choix (`require`). Le moteur les applique ;
   le plugin reste de la donnée.
+- **`variants`** décrit une matrice cartésienne pour `klairox batch` : quelles couches
+  croiser, ce qui reste fixe, et comment nommer les fichiers de sortie.
 - **`exports`** déclare les formats de sortie, la miniature et le fichier de métadonnées.
 
 La référence complète du manifeste se trouve dans [docs/plugins.md](docs/plugins.md). Un JSON
@@ -192,10 +223,18 @@ const { artifacts } = await engine.generate({
   outputDir: 'dist/assets',
   name: 'grey-horse',
 });
+
+// Expand the variant matrix and export every valid combination
+await engine.batch({
+  plugin,
+  outputDir: 'dist/batch',
+  concurrency: 4,
+});
 ```
 
 Besoin d'une prévisualisation sans écrire de fichiers ? `engine.plan(plugin, selection)` renvoie
-un objet sérialisable décrivant exactement ce qui serait peint.
+un objet sérialisable décrivant exactement ce qui serait peint. `engine.expandVariants(plugin)`
+liste les jobs du batch de la même façon, sans rendu.
 
 ## Architecture
 
@@ -225,12 +264,12 @@ de conception.
 
 ## Packages
 
-| Package               | Rôle                                                                                         |
-| --------------------- | -------------------------------------------------------------------------------------------- |
-| `@klairox/plugin-sdk` | Schéma de manifeste, validation et types. Le contrat visé par les auteurs de plugins.        |
-| `@klairox/core`       | Chargeur de plugins, moteur de règles, composition, gestionnaire d'export, bus d'événements. |
-| `@klairox/renderer`   | Renderer de référence bâti sur Sharp/libvips.                                                |
-| `@klairox/cli`        | `klairox generate`, `validate` et `info`.                                                    |
+| Package               | Rôle                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `@klairox/plugin-sdk` | Schéma de manifeste, validation et types. Le contrat visé par les auteurs de plugins. |
+| `@klairox/core`       | Chargeur, règles, composition, batch de variantes, export, bus d'événements.          |
+| `@klairox/renderer`   | Renderer de référence bâti sur Sharp/libvips.                                         |
+| `@klairox/cli`        | `klairox generate`, `batch`, `validate` et `info`.                                    |
 
 ## Organisation du dépôt
 
@@ -260,12 +299,14 @@ npx nx run-many -t test --skip-nx-cache
 npx nx graph                       # visualiser le graphe de dépendances
 npm run example:assets             # régénérer les visuels placeholder
 npm run example:generate           # générer l'asset d'exemple avec les valeurs par défaut
+npm run example:batch              # générer la matrice de variantes du cheval
 ```
 
 ## Roadmap
 
-Le moteur correspond aux phases 1 et 2 d'un plan plus large : matrices de variantes, fichiers de
-projet et templates, éditeur Angular, packaging de plugins. Voir [docs/roadmap.md](docs/roadmap.md).
+Les phases 1 à 4 sont faites (fondation, règles, CLI, batch de variantes). Ensuite : sprite
+sheets, fichiers de projet et templates, éditeur Angular, packaging de plugins. Voir
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Licence
 

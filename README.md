@@ -25,8 +25,9 @@ touching the engine.
 
 ![Four horse variants generated from the same plugin](docs/images/horse-preview.png)
 
-_Four assets produced from one plugin and one command. The artwork is deliberately schematic:
-the example ships placeholder shapes so the composition rules stay the point._
+_Four assets produced from one plugin. With `klairox batch`, the same plugin can emit a full
+matrix of combinations. The artwork is deliberately schematic: placeholder shapes keep the
+focus on the composition rules._
 
 ---
 
@@ -104,6 +105,20 @@ npm run klairox -- batch plugins/horse --dry-run
 npm run klairox -- batch plugins/horse --out dist/batch
 ```
 
+```
+horse v1.0.0 - batch via sharp
+
+Variants
+  axes       coat × equipment
+  planned    8
+  + horse-bay-saddle (generated)
+  + horse-bay-armor (generated)
+  …
+```
+
+`--dry-run` lists the matrix without writing files. A second run skips unchanged variants
+when the metadata sidecar is enabled (the plan hash lives there).
+
 ## How a plugin looks
 
 A plugin is a directory containing a manifest and some images. No build step, no code.
@@ -148,6 +163,12 @@ plugins/horse/
     },
   ],
 
+  "variants": {
+    "axes": ["coat", "equipment"],
+    "include": { "body": "standard", "mane": "short" },
+    "name": "{plugin}-{coat}-{equipment}",
+  },
+
   "exports": {
     "formats": ["png", "webp"],
     "thumbnail": { "width": 128 },
@@ -155,12 +176,14 @@ plugins/horse/
 }
 ```
 
-Three ideas carry most of the weight:
+Four ideas carry most of the weight:
 
 - **`dependsOn`** orders resolution, so a downstream layer is picked with upstream choices
   already known. **`order`** is separate and controls stacking.
 - **`constraints`** react to a selection and can `disable` an option, `hide` a layer or
   `require` another choice. The engine enforces them; the plugin stays data.
+- **`variants`** describes a cartesian matrix for `klairox batch`: which layers to cross,
+  what stays fixed, and how output files are named.
 - **`exports`** declares the output formats, thumbnail and metadata sidecar.
 
 The full manifest reference lives in [docs/plugins.md](docs/plugins.md). A JSON Schema is
@@ -195,10 +218,18 @@ const { artifacts } = await engine.generate({
   outputDir: 'dist/assets',
   name: 'grey-horse',
 });
+
+// Expand the variant matrix and export every valid combination
+await engine.batch({
+  plugin,
+  outputDir: 'dist/batch',
+  concurrency: 4,
+});
 ```
 
 Need a preview without writing files? `engine.plan(plugin, selection)` returns a plain
-serialisable object describing exactly what would be painted.
+serialisable object describing exactly what would be painted. `engine.expandVariants(plugin)`
+lists the batch jobs the same way, without rendering.
 
 ## Architecture
 
@@ -231,7 +262,7 @@ in detail.
 | Package               | Role                                                                       |
 | --------------------- | -------------------------------------------------------------------------- |
 | `@klairox/plugin-sdk` | Manifest schema, validation and types. The contract plugin authors target. |
-| `@klairox/core`       | Plugin loader, rule engine, composition engine, export manager, event bus. |
+| `@klairox/core`       | Plugin loader, rules, composition, batch variants, export manager, events. |
 | `@klairox/renderer`   | Reference renderer built on Sharp/libvips.                                 |
 | `@klairox/cli`        | `klairox generate`, `batch`, `validate` and `info`.                        |
 
@@ -262,12 +293,14 @@ npx nx run-many -t test --skip-nx-cache
 npx nx graph                       # visualise the dependency graph
 npm run example:assets             # regenerate the placeholder artwork
 npm run example:generate           # generate the example asset with defaults
+npm run example:batch              # generate the horse variant matrix
 ```
 
 ## Roadmap
 
-The engine covers Phases 1–4 of a longer plan: project files and templates, an Angular editor,
-and plugin packaging. See [docs/roadmap.md](docs/roadmap.md).
+Phases 1–4 are done (foundation, rules, CLI, batch variants). Next up: sprite sheets, project
+files and templates, an Angular editor, and plugin packaging. See
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Licence
 

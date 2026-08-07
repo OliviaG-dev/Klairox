@@ -9,6 +9,16 @@ import {
 import { exportComposition } from './export/export-manager.js';
 import type { ExportedArtifact, ExportOptions } from './export/export.types.js';
 import {
+  expandVariants,
+  type ExpandVariantsResult,
+} from './batch/expand-variants.js';
+import {
+  runBatch,
+  type BatchRequest,
+  type BatchResult,
+} from './batch/run-batch.js';
+import type { VariantOverrides } from './batch/variant-config.js';
+import {
   loadPlugin,
   type LoadedPlugin,
   type LoadPluginOptions,
@@ -89,6 +99,17 @@ export class KlairoxEngine {
     return plan;
   }
 
+  /**
+   * Expands the plugin's variant matrix into planned jobs, without rendering.
+   * Invalid combinations are listed under `rejected` rather than throwing.
+   */
+  expandVariants(
+    plugin: LoadedPlugin,
+    overrides: VariantOverrides = {},
+  ): ExpandVariantsResult {
+    return expandVariants(plugin, overrides);
+  }
+
   async generate(request: GenerateRequest): Promise<GenerateResult> {
     const { plugin, selection, ...exportOptions } = request;
     const plan = this.plan(plugin, selection);
@@ -111,5 +132,13 @@ export class KlairoxEngine {
     });
 
     return { plan, artifacts };
+  }
+
+  /** Expands variants and exports each job, with optional dry-run and cache skip. */
+  async batch(request: BatchRequest): Promise<BatchResult> {
+    return runBatch(request, {
+      renderer: this.renderer,
+      events: this.events,
+    });
   }
 }

@@ -43,8 +43,8 @@ horse generator, a character creator or a weapon skin pipeline.
 
 ## Status
 
-Early but working. The engine, the rule system and the CLI are implemented and tested
-end to end. The web editor is not built yet — see the [roadmap](docs/roadmap.md).
+Early but working. The engine, the rule system, batch variants and the CLI are implemented and
+tested end to end. The web editor is not built yet — see the [roadmap](docs/roadmap.md).
 
 ## Quick start
 
@@ -96,6 +96,13 @@ Output
 
 Layers you leave out are filled in for you: required layers fall back to their first option
 still allowed by the constraints, optional layers stay unset.
+
+Generate every combination declared by the plugin's `variants` section:
+
+```bash
+npm run klairox -- batch plugins/horse --dry-run
+npm run klairox -- batch plugins/horse --out dist/batch
+```
 
 ## How a plugin looks
 
@@ -226,7 +233,7 @@ in detail.
 | `@klairox/plugin-sdk` | Manifest schema, validation and types. The contract plugin authors target. |
 | `@klairox/core`       | Plugin loader, rule engine, composition engine, export manager, event bus. |
 | `@klairox/renderer`   | Reference renderer built on Sharp/libvips.                                 |
-| `@klairox/cli`        | `klairox generate`, `validate` and `info`.                                 |
+| `@klairox/cli`        | `klairox generate`, `batch`, `validate` and `info`.                        |
 
 ## Repository layout
 
@@ -259,8 +266,8 @@ npm run example:generate           # generate the example asset with defaults
 
 ## Roadmap
 
-The engine is Phase 1 and 2 of a longer plan: variant matrices, project files and templates,
-an Angular editor, and plugin packaging. See [docs/roadmap.md](docs/roadmap.md).
+The engine covers Phases 1–4 of a longer plan: project files and templates, an Angular editor,
+and plugin packaging. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Licence
 

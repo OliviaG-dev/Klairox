@@ -126,7 +126,7 @@ timestamp. Asset pipelines can therefore cache on content and diffs stay meaning
 
 Every failure is a `KlairoxError` carrying a stable machine-readable `code`
 (`MANIFEST_INVALID`, `ASSET_NOT_FOUND`, `SELECTION_INVALID`, `CONSTRAINT_VIOLATION`,
-`RENDER_FAILED`, ...) and a list of `details`.
+`VARIANTS_INVALID`, `RENDER_FAILED`, ...) and a list of `details`.
 
 Problems are collected rather than thrown one at a time: an invalid manifest reports every
 issue at once, and a plugin with missing artwork lists every missing file. Fixing a plugin is
@@ -135,10 +135,11 @@ one pass, not a game of whack-a-mole.
 ## Events
 
 The engine exposes a typed event bus (`plugin:loaded`, `selection:resolved`,
-`composition:planned`, `asset:rendered`, `asset:exported`) instead of being coupled to a host.
-The same core drives the CLI today and can drive an Angular editor, a React app or a desktop
-shell without modification. A listener that throws does not prevent the other listeners from
-running; the failures are collected and reported together.
+`composition:planned`, `asset:rendered`, `asset:exported`, `batch:started`, `batch:variant`,
+`batch:completed`) instead of being coupled to a host. The same core drives the CLI today and
+can drive an Angular editor, a React app or a desktop shell without modification. A listener
+that throws does not prevent the other listeners from running; the failures are collected and
+reported together.
 
 ## Security
 

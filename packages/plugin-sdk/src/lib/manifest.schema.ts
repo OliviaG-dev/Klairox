@@ -86,6 +86,35 @@ export const exportsSchema = z.strictObject({
   metadata: z.boolean().default(true),
 });
 
+/**
+ * One combination to drop from a variant matrix. Every entry must match for the
+ * combo to be excluded (same matching rules as a constraint `when` with scalars).
+ */
+export const variantExcludeSchema = z
+  .record(z.string(), identifierSchema)
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'must contain at least one layer',
+  });
+
+/**
+ * Declares a cartesian product of layer options for batch generation.
+ * Option lists come from the layers themselves — axes only name which layers to expand.
+ */
+export const variantsSchema = z.strictObject({
+  /** Layers whose options are crossed to build the matrix. */
+  axes: z.array(identifierSchema).min(1),
+  /** Fixed choices applied to every variant (must not overlap axes). */
+  include: z.record(z.string(), identifierSchema).default({}),
+  /** Combinations to drop before rendering. */
+  exclude: z.array(variantExcludeSchema).default([]),
+  /**
+   * Output base name. Placeholders: `{plugin}`, `{<layerId>}` for each selected layer.
+   * Defaults to `{plugin}` plus one `{axis}` segment per axis, joined with dashes.
+   */
+  name: z.string().min(1).optional(),
+  strategy: z.literal('cartesian').default('cartesian'),
+});
+
 export const canvasSchema = z.strictObject({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
@@ -108,4 +137,5 @@ export const pluginManifestSchema = z.strictObject({
   layers: z.array(layerSchema).min(1),
   constraints: z.array(constraintSchema).default([]),
   exports: exportsSchema.default({ formats: ['png'], metadata: true }),
+  variants: variantsSchema.optional(),
 });

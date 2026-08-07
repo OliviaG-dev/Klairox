@@ -80,4 +80,49 @@ describe('KlairoxEngine', () => {
 
     expect(calls).toBe(1);
   });
+
+  it('batches every valid variant and skips unchanged work on a second run', async () => {
+    const plugin = createTestPlugin({
+      exports: { formats: ['png'], metadata: true },
+      variants: { axes: ['coat'] },
+    });
+
+    const first = await engine.batch({
+      plugin,
+      outputDir,
+      concurrency: 2,
+    });
+
+    expect(first.results).toHaveLength(2);
+    expect(first.results.every((result) => result.status === 'generated')).toBe(
+      true,
+    );
+
+    const second = await engine.batch({
+      plugin,
+      outputDir,
+      concurrency: 2,
+    });
+
+    expect(second.results.every((result) => result.status === 'cached')).toBe(
+      true,
+    );
+  });
+
+  it('dry-runs a batch without rendering', async () => {
+    const plugin = createTestPlugin({
+      variants: { axes: ['coat'] },
+    });
+
+    const result = await engine.batch({
+      plugin,
+      outputDir,
+      dryRun: true,
+    });
+
+    expect(result.results.every((entry) => entry.status === 'planned')).toBe(
+      true,
+    );
+    expect(renderer.requests).toHaveLength(0);
+  });
 });

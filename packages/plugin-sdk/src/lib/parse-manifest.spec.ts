@@ -105,4 +105,60 @@ describe('parsePluginManifest', () => {
 
     expect(expectIssues(input).join('\n')).toMatch(/layers/);
   });
+
+  it('accepts a variants section and applies its defaults', () => {
+    const result = parsePluginManifest(
+      createManifestInput({
+        variants: { axes: ['coat', 'equipment'] },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.manifest.variants).toEqual({
+      axes: ['coat', 'equipment'],
+      include: {},
+      exclude: [],
+      strategy: 'cartesian',
+    });
+  });
+
+  it('rejects an unknown variants axis', () => {
+    const input = createManifestInput({
+      variants: { axes: ['ghost'] },
+    });
+
+    expect(expectIssues(input)).toContainEqual(
+      'variants.axes[0]: unknown layer "ghost"',
+    );
+  });
+
+  it('rejects an include that overlaps an axis', () => {
+    const input = createManifestInput({
+      variants: {
+        axes: ['coat'],
+        include: { coat: 'bay' },
+      },
+    });
+
+    expect(expectIssues(input)).toContainEqual(
+      'variants.include.coat: layer "coat" cannot appear in both axes and include',
+    );
+  });
+
+  it('rejects an exclude that points at an unknown option', () => {
+    const input = createManifestInput({
+      variants: {
+        axes: ['coat'],
+        exclude: [{ coat: 'palomino' }],
+      },
+    });
+
+    expect(expectIssues(input)).toContainEqual(
+      'variants.exclude[0].coat: unknown option "palomino" for layer "coat"',
+    );
+  });
 });

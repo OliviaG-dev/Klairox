@@ -46,8 +46,9 @@ d'armes.
 
 ## État du projet
 
-Jeune mais fonctionnel. Le moteur, le système de règles et la CLI sont implémentés et testés de
-bout en bout. L'éditeur web n'est pas encore construit — voir la [roadmap](docs/roadmap.md).
+Jeune mais fonctionnel. Le moteur, le système de règles, les matrices de variantes et la CLI
+sont implémentés et testés de bout en bout. L'éditeur web n'est pas encore construit — voir la
+[roadmap](docs/roadmap.md).
 
 ## Démarrage rapide
 
@@ -99,6 +100,13 @@ Output
 
 Les couches que vous omettez sont complétées automatiquement : une couche obligatoire prend sa
 première option encore autorisée par les contraintes, une couche optionnelle reste vide.
+
+Générer toutes les combinaisons déclarées par la section `variants` du plugin :
+
+```bash
+npm run klairox -- batch plugins/horse --dry-run
+npm run klairox -- batch plugins/horse --out dist/batch
+```
 
 ## À quoi ressemble un plugin
 
@@ -230,7 +238,7 @@ de conception.
 | `@klairox/plugin-sdk` | Schéma de manifeste, validation et types. Le contrat visé par les auteurs de plugins.        |
 | `@klairox/core`       | Chargeur de plugins, moteur de règles, composition, gestionnaire d'export, bus d'événements. |
 | `@klairox/renderer`   | Renderer de référence bâti sur Sharp/libvips.                                                |
-| `@klairox/cli`        | `klairox generate`, `validate` et `info`.                                                    |
+| `@klairox/cli`        | `klairox generate`, `batch`, `validate` et `info`.                                           |
 
 ## Organisation du dépôt
 
@@ -264,8 +272,8 @@ npm run example:generate           # générer l'asset d'exemple avec les valeur
 
 ## Roadmap
 
-Le moteur correspond aux phases 1 et 2 d'un plan plus large : matrices de variantes, fichiers de
-projet et templates, éditeur Angular, packaging de plugins. Voir [docs/roadmap.md](docs/roadmap.md).
+Le moteur couvre les phases 1 à 4 d'un plan plus large : fichiers de projet et templates,
+éditeur Angular, packaging de plugins. Voir [docs/roadmap.md](docs/roadmap.md).
 
 ## Licence
 

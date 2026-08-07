@@ -120,6 +120,11 @@
       "disable": ["equipment:saddle"]
     }
   ],
+  "variants": {
+    "axes": ["coat", "equipment"],
+    "include": { "body": "standard", "mane": "short" },
+    "name": "{plugin}-{coat}-{equipment}"
+  },
   "exports": {
     "formats": ["png", "webp"],
     "thumbnail": { "width": 128 },

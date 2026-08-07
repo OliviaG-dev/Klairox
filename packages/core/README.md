@@ -35,7 +35,18 @@ const plan = buildCompositionPlan(plugin, { coat: 'grey' });
 const bytes = await renderer.render(toRenderRequest(plan, 'png'));
 ```
 
-Subscribe to `plugin:loaded`, `selection:resolved`, `composition:planned`, `asset:rendered`
-and `asset:exported` to drive a UI without polling.
+Subscribe to `plugin:loaded`, `selection:resolved`, `composition:planned`, `asset:rendered`,
+`asset:exported` and the `batch:*` events to drive a UI without polling.
+
+Batch generation expands a variant matrix, skips unchanged work via the plan hash, and renders
+in parallel:
+
+```ts
+await engine.batch({
+  plugin,
+  outputDir: 'dist/batch',
+  concurrency: 4,
+});
+```
 
 See [docs/architecture.md](../../docs/architecture.md) for the pipeline in detail.

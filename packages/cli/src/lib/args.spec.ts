@@ -30,6 +30,10 @@ describe('parseCliArgs', () => {
       quality: undefined,
       thumbnail: true,
       metadata: true,
+      axes: [],
+      dryRun: false,
+      force: false,
+      concurrency: undefined,
     });
   });
 
@@ -88,6 +92,35 @@ describe('parseCliArgs', () => {
   it('rejects a non-numeric quality', () => {
     expect(() => parseCliArgs(['generate', 'p', '--quality', 'high'])).toThrow(
       /Invalid --quality "high"/,
+    );
+  });
+
+  it('parses batch axes, dry-run and concurrency', () => {
+    expect(
+      runOptions([
+        'batch',
+        'plugins/horse',
+        '-a',
+        'coat',
+        '--axis',
+        'mane',
+        '--dry-run',
+        '--force',
+        '--concurrency',
+        '2',
+      ]),
+    ).toMatchObject({
+      command: 'batch',
+      axes: ['coat', 'mane'],
+      dryRun: true,
+      force: true,
+      concurrency: 2,
+    });
+  });
+
+  it('rejects a non-positive concurrency', () => {
+    expect(() => parseCliArgs(['batch', 'p', '--concurrency', '0'])).toThrow(
+      /Invalid --concurrency "0"/,
     );
   });
 

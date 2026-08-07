@@ -26,16 +26,17 @@ Where the project stands and what comes next. Each phase is meant to be shippabl
 
 - `klairox generate`, `validate` and `info`, with per-layer selection and export overrides.
 
-## Next
-
 ### Phase 4 — Variants and batch generation
 
-The single biggest lever for real game pipelines: today one command produces one asset.
-
-- A `variants` section in the manifest describing axes to expand (coat × season × equipment).
+- A `variants` section in the manifest describing axes to expand (coat × equipment).
 - `klairox batch` to generate the full matrix, with a naming template for the output files.
-- Skip work whose inputs have not changed, using the plan hash.
-- Parallel rendering with a bounded worker pool.
+- Skip work whose inputs have not changed, using the plan hash stored in the metadata sidecar.
+- Parallel rendering with a bounded async worker pool (`--concurrency`).
+
+## Next
+
+### Phase 4b — Sprite sheets
+
 - A sprite-sheet exporter with its atlas JSON.
 
 ### Phase 5 — Projects and templates
@@ -85,3 +86,5 @@ Deliberate gaps in the current implementation, each cheap to lift when needed:
   another constraint's effect. Deliberate, to keep evaluation predictable and cycle-free.
 - **The plugin loader reads from disk.** A virtual file system would let the browser editor
   load plugins over HTTP.
+- **Batch skip-cache needs metadata.** `--no-metadata` disables plan-hash caching because the
+  sidecar is where the hash lives.

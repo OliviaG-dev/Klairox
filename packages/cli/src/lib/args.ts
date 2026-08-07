@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 import type { ImageFormat } from '@klairox/plugin-sdk';
 
-export const COMMANDS = ['generate', 'validate', 'info'] as const;
+export const COMMANDS = ['generate', 'batch', 'validate', 'info'] as const;
 export type CommandName = (typeof COMMANDS)[number];
 
 export interface CliOptions {
@@ -14,6 +14,10 @@ export interface CliOptions {
   readonly quality?: number;
   readonly thumbnail: boolean;
   readonly metadata: boolean;
+  readonly axes: readonly string[];
+  readonly dryRun: boolean;
+  readonly force: boolean;
+  readonly concurrency?: number;
 }
 
 export type ParsedArgs =
@@ -61,6 +65,10 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
       quality: parseQuality(values.quality),
       thumbnail: values['no-thumbnail'] !== true,
       metadata: values['no-metadata'] !== true,
+      axes: values.axis ?? [],
+      dryRun: values['dry-run'] === true,
+      force: values.force === true,
+      concurrency: parseConcurrency(values.concurrency),
     },
   };
 }
@@ -75,6 +83,10 @@ interface RawValues {
   readonly quality?: string;
   readonly 'no-thumbnail'?: boolean;
   readonly 'no-metadata'?: boolean;
+  readonly axis?: string[];
+  readonly 'dry-run'?: boolean;
+  readonly force?: boolean;
+  readonly concurrency?: string;
 }
 
 function parseArgsSafely(argv: readonly string[]): {
@@ -95,6 +107,10 @@ function parseArgsSafely(argv: readonly string[]): {
         quality: { type: 'string' },
         'no-thumbnail': { type: 'boolean' },
         'no-metadata': { type: 'boolean' },
+        axis: { type: 'string', short: 'a', multiple: true },
+        'dry-run': { type: 'boolean' },
+        force: { type: 'boolean' },
+        concurrency: { type: 'string' },
       },
     });
   } catch (error) {
@@ -157,6 +173,21 @@ function parseQuality(quality: string | undefined): number | undefined {
   if (!Number.isInteger(parsed) || parsed < 0) {
     throw new UsageError(
       `Invalid --quality "${quality}". Expected a non-negative integer`,
+    );
+  }
+
+  return parsed;
+}
+
+function parseConcurrency(concurrency: string | undefined): number | undefined {
+  if (concurrency === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number(concurrency);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new UsageError(
+      `Invalid --concurrency "${concurrency}". Expected a positive integer`,
     );
   }
 

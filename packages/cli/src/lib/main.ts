@@ -1,5 +1,6 @@
 import { isKlairoxError } from '@klairox/core';
 import { parseCliArgs, UsageError, type CliOptions } from './args.js';
+import { runBatch } from './commands/batch.js';
 import { runGenerate } from './commands/generate.js';
 import { runInfo } from './commands/info.js';
 import { runValidate } from './commands/validate.js';
@@ -16,6 +17,7 @@ const COMMAND_HANDLERS: Record<
   (options: CliOptions) => Promise<void>
 > = {
   generate: runGenerate,
+  batch: runBatch,
   validate: runValidate,
   info: runInfo,
 };

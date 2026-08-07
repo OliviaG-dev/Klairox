@@ -19,6 +19,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
+      # PR checkouts do not create a local `main` ref; Nx format/affected need it.
+      - run: git fetch origin main:refs/remotes/origin/main
+
       # Task distribution and remote caching, only when the workspace is connected
       # to Nx Cloud. Must run before dependencies are installed.
       # https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
@@ -34,7 +37,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npx nx format:check
+      - run: npx nx format:check --base=origin/main
       # Fails if a package.json dependency is missing from the TypeScript project references
       - run: npx nx sync:check
       - run: npx nx run-many -t lint typecheck test build

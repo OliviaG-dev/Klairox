@@ -37,12 +37,12 @@ npx nx graph
 
 ### Usage dans ce projet
 
-| Projet | Tag | Dépend de |
-|--------|-----|-----------|
-| `plugin-sdk` | `type:contract` | — |
-| `core` | `type:engine` | `plugin-sdk` |
-| `renderer` | `type:adapter` | `core`, `plugin-sdk` |
-| `cli` | `type:app` | les trois |
+| Projet       | Tag             | Dépend de            |
+| ------------ | --------------- | -------------------- |
+| `plugin-sdk` | `type:contract` | —                    |
+| `core`       | `type:engine`   | `plugin-sdk`         |
+| `renderer`   | `type:adapter`  | `core`, `plugin-sdk` |
+| `cli`        | `type:app`      | les trois            |
 
 Points spécifiques framework (vs app Stalloria) :
 

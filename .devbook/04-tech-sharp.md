@@ -20,7 +20,9 @@ interface Renderer {
 // packages/renderer
 export class SharpRenderer implements Renderer {
   readonly name = 'sharp';
-  async render(request: RenderRequest): Promise<Uint8Array> { /* … */ }
+  async render(request: RenderRequest): Promise<Uint8Array> {
+    /* … */
+  }
 }
 ```
 
@@ -45,7 +47,7 @@ Flux typique :
 
 ### Pièges rencontrés
 
-- **Pas d'opacité par overlay native** : Sharp ne propose pas d'opacity par composite comme Photoshop. Solution : multiplier le canal alpha de la couche *avant* le composite.
+- **Pas d'opacité par overlay native** : Sharp ne propose pas d'opacity par composite comme Photoshop. Solution : multiplier le canal alpha de la couche _avant_ le composite.
 - **Resize vs composite** : dans un seul pipeline Sharp, le resize s'applique avant le composite. Les thumbnails doivent donc partir de l'image déjà composée, pas du même pipeline « create + composite + resize ».
 - **Offsets négatifs / calques hors canvas** : volontairement non supportés pour l'instant (limitation documentée dans la roadmap).
 - Dépendance native libvips : installer Sharp peut échouer selon plateforme / CI — à anticiper pour la publication et les contributors.

@@ -44,12 +44,12 @@ Dans un `plugin.json` :
 
 ### Usage dans ce projet
 
-| Fichier / API | Rôle |
-|---------------|------|
-| `manifest.schema.ts` | Définitions Zod |
-| `parse-manifest.ts` | Parse + résultat plain (Zod ne fuit pas) |
-| `manifest-integrity.ts` | 2ᵉ passe : unicité, refs, cycles `dependsOn` |
-| `tools/generate-plugin-schema.mjs` | Écrit le JSON Schema |
+| Fichier / API                      | Rôle                                         |
+| ---------------------------------- | -------------------------------------------- |
+| `manifest.schema.ts`               | Définitions Zod                              |
+| `parse-manifest.ts`                | Parse + résultat plain (Zod ne fuit pas)     |
+| `manifest-integrity.ts`            | 2ᵉ passe : unicité, refs, cycles `dependsOn` |
+| `tools/generate-plugin-schema.mjs` | Écrit le JSON Schema                         |
 
 Validation en **deux passes** :
 
@@ -58,7 +58,7 @@ Validation en **deux passes** :
 
 ### Pièges rencontrés
 
-- Faire dériver types *et* JSON Schema sans versionner le script `schema` → le fichier généré doit rester synchronisé (CI / `npm run check` mental).
+- Faire dériver types _et_ JSON Schema sans versionner le script `schema` → le fichier généré doit rester synchronisé (CI / `npm run check` mental).
 - Laisser Zod traverser la frontière SDK → le reste du monorepo consommerait une lib de validation au lieu d'un contrat stable.
 - Defaults Zod (`required: false` par défaut, tags `[]`) : bien documenter ce que le loader remplit vs ce que l'auteur doit écrire.
 

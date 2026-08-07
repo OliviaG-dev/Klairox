@@ -2,6 +2,7 @@
 
 **Un framework de composition d'assets 2D piloté par les données et extensible par plugins.**
 
+[![CI](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml/badge.svg)](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A520-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Nx](https://img.shields.io/badge/Nx-23.1-143055?logo=nx&logoColor=white)](https://nx.dev/)

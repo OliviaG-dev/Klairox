@@ -14,12 +14,12 @@ C'est proche d'une architecture hexagonale / ports & adapters, appliquée à un 
 
 Découpage volontaire dès le début :
 
-| Couche | Package | Connaît |
-|--------|---------|---------|
-| Contrat | `plugin-sdk` | Structure du manifeste |
-| Moteur | `core` | Contrat uniquement |
-| Adaptateur | `renderer` | Port `Renderer` + Sharp |
-| App | `cli` | Tout (composition root) |
+| Couche     | Package      | Connaît                 |
+| ---------- | ------------ | ----------------------- |
+| Contrat    | `plugin-sdk` | Structure du manifeste  |
+| Moteur     | `core`       | Contrat uniquement      |
+| Adaptateur | `renderer`   | Port `Renderer` + Sharp |
+| App        | `cli`        | Tout (composition root) |
 
 Le plugin d'exemple `plugins/horse` valide le modèle de bout en bout (info / validate / generate).
 
@@ -30,17 +30,17 @@ Le plugin d'exemple `plugins/horse` valide le modèle de bout en bout (info / va
 Les couches sont parcourues en ordre **`dependsOn`**, pas en ordre de peinture :
 
 1. rejeter les options inconnues
-2. pour chaque couche : évaluer les contraintes sur la sélection *déjà* résolue ; appliquer choix utilisateur ou défaut ; sinon laisser vide si optionnelle
+2. pour chaque couche : évaluer les contraintes sur la sélection _déjà_ résolue ; appliquer choix utilisateur ou défaut ; sinon laisser vide si optionnelle
 3. revalider les `require` sur la sélection finale
 
 Ainsi, « body = heavy » peut restreindre les coats aval **sans code** dans le plugin.
 
 #### `order` vs `dependsOn`
 
-| Champ | Signification |
-|-------|----------------|
-| `order` | z-index (peint en premier = plus bas) |
-| `dependsOn` | ordre de résolution des choix |
+| Champ       | Signification                         |
+| ----------- | ------------------------------------- |
+| `order`     | z-index (peint en premier = plus bas) |
+| `dependsOn` | ordre de résolution des choix         |
 
 Une couche peut être peinte en dernier et résolue en premier. Les confondre casse soit le rendu, soit les règles.
 

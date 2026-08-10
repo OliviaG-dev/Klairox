@@ -233,7 +233,7 @@ async function main() {
   await chromaKeyGreen(
     A('horse-coat-cream-greenscreen.png'),
     path.join(OUT, 'coat/cream.png'),
-    { erode: 2 },
+    { erode: 1 },
   );
 
   for (const rel of [

@@ -4,19 +4,25 @@
  * The shapes are intentionally schematic: the point of the example plugin is to show
  * how layers, constraints and dependencies compose, not to ship finished art.
  *
+ * Prefer the realistic layer pipeline when available:
+ *   node tools/process-horse-layers.mjs
+ *
  * Usage: node tools/generate-example-assets.mjs
+ *
+ * Safety: refuses to overwrite if `docs/images/horse-base/master-3q-darkbay.png` exists,
+ * unless FORCE_PLACEHOLDER_ASSETS=1 is set.
  */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const CANVAS = 512;
-const PLUGIN_DIR = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-  'plugins',
-  'horse',
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PLUGIN_DIR = path.join(ROOT, 'plugins', 'horse');
+const REALISTIC_MASTER = path.join(
+  ROOT,
+  'docs/images/horse-base/master-3q-darkbay.png',
 );
 
 const MANE_COLOR = '#3b2a1d';
@@ -65,6 +71,22 @@ const ASSETS = {
 };
 
 async function main() {
+  if (process.env.FORCE_PLACEHOLDER_ASSETS !== '1') {
+    try {
+      await access(REALISTIC_MASTER);
+      console.error(
+        'Refusing to overwrite realistic horse layers.\n' +
+          `Found ${path.relative(ROOT, REALISTIC_MASTER)}.\n` +
+          'Use: node tools/process-horse-layers.mjs\n' +
+          'Or set FORCE_PLACEHOLDER_ASSETS=1 to restore placeholders.',
+      );
+      process.exitCode = 1;
+      return;
+    } catch {
+      // No realistic master — placeholders are fine.
+    }
+  }
+
   const entries = Object.entries(ASSETS);
 
   await Promise.all(

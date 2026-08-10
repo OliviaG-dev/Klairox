@@ -13,7 +13,7 @@
     [style.width.px]="plugin.manifest.canvas.width"
     [style.height.px]="plugin.manifest.canvas.height"
   >
-    @for (layer of session.previewLayers(); track layer.layerId) {
+    @for (layer of session.previewLayers(); track layer.layerId + ':' + layer.optionId) {
     <img
       class="stage__layer"
       [src]="layer.url"

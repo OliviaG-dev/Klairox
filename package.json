@@ -11,11 +11,13 @@
     "check": "nx run-many -t lint,typecheck,test,build",
     "klairox": "node packages/cli/dist/bin.js",
     "example:assets": "node tools/generate-example-assets.mjs",
+    "example:horse-layers": "node tools/process-horse-layers.mjs",
+    "example:sync-editor-plugin": "node tools/sync-editor-horse-plugin.mjs",
     "example:generate": "node packages/cli/dist/bin.js generate plugins/horse --out dist/assets",
     "example:batch": "node packages/cli/dist/bin.js batch plugins/horse --out dist/batch",
     "schema": "node tools/generate-plugin-schema.mjs",
-    "editor": "nx serve editor",
-    "editor:build": "nx build editor"
+    "editor": "node tools/sync-editor-horse-plugin.mjs && nx serve editor",
+    "editor:build": "node tools/sync-editor-horse-plugin.mjs && nx build editor"
   },
   "private": true,
   "devDependencies": {

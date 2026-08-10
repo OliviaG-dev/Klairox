@@ -25,11 +25,6 @@
           {
             "glob": "**/*",
             "input": "apps/editor/public"
-          },
-          {
-            "glob": "**/*",
-            "input": "plugins/horse",
-            "output": "plugins/horse"
           }
         ],
         "styles": ["apps/editor/src/styles.css"]

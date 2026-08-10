@@ -83,6 +83,11 @@ export class EditorSession {
         continue;
       }
 
+      // Coats are full painted horses; drawing body underneath doubles the silhouette.
+      if (layer.id === 'body' && selection['coat'] !== undefined) {
+        continue;
+      }
+
       const optionId = selection[layer.id];
       if (optionId === undefined) {
         continue;
@@ -185,7 +190,8 @@ function toLoadedPlugin(
 
 function assetUrl(rootDir: string, asset: string): string {
   const base = rootDir.endsWith('/') ? rootDir : `${rootDir}/`;
-  return `${base}${asset.replace(/^\//, '')}`;
+  // Bust browser cache when plugin artwork is replaced during local iteration.
+  return `${base}${asset.replace(/^\//, '')}?v=tail-hybrid-v1`;
 }
 
 function errorMessage(error: unknown): string {

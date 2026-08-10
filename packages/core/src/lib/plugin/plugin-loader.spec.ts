@@ -54,8 +54,8 @@ describe('loadPlugin', () => {
 
     expect(plugin.manifest.name).toBe('horse');
     expect(plugin.manifest.layers).toHaveLength(5);
-    expect(plugin.manifest.constraints).toHaveLength(3);
-    expect(plugin.index.layers.get('coat')?.options).toHaveLength(4);
+    expect(plugin.manifest.constraints).toHaveLength(4);
+    expect(plugin.index.layers.get('coat')?.options).toHaveLength(8);
   });
 
   it('reads a YAML manifest', async () => {

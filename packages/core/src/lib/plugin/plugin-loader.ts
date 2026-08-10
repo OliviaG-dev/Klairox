@@ -1,21 +1,12 @@
 import { access } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  indexManifest,
-  parsePluginManifest,
-  type ManifestIndex,
-  type PluginManifest,
-} from '@klairox/plugin-sdk';
+import { indexManifest, parsePluginManifest } from '@klairox/plugin-sdk';
 import { KlairoxError } from '../errors.js';
 import { resolveAssetPath } from './asset-path.js';
 import { readManifestSource } from './manifest-source.js';
+import type { LoadedPlugin } from './plugin.types.js';
 
-export interface LoadedPlugin {
-  readonly manifest: PluginManifest;
-  readonly index: ManifestIndex;
-  readonly rootDir: string;
-  readonly manifestPath: string;
-}
+export type { LoadedPlugin } from './plugin.types.js';
 
 export interface LoadPluginOptions {
   /** Checks that every declared asset exists on disk. Enabled by default. */

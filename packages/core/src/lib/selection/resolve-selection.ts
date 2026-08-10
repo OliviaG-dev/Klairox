@@ -1,6 +1,6 @@
 import { formatTargetRef } from '@klairox/plugin-sdk';
 import { KlairoxError } from '../errors.js';
-import type { LoadedPlugin } from '../plugin/plugin-loader.js';
+import type { LoadedPlugin } from '../plugin/plugin.types.js';
 import {
   disablingConstraint,
   evaluateConstraints,

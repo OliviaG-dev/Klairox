@@ -1,5 +1,9 @@
 # Klairox
 
+<p align="center">
+  <img src="docs/images/brand/lockup-dark.png" alt="Klairox" width="420" />
+</p>
+
 **A data-driven 2D asset composition framework, extensible through plugins.**
 
 [![CI](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml/badge.svg)](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml)
@@ -45,7 +49,12 @@ horse generator, a character creator or a weapon skin pipeline.
 ## Status
 
 Early but working. The engine, the rule system, batch variants and the CLI are implemented and
-tested end to end. The web editor is not built yet — see the [roadmap](docs/roadmap.md).
+tested end to end. The web editor is under construction at `apps/editor` — see the
+[roadmap](docs/roadmap.md).
+
+```bash
+npm run editor
+```
 
 ## Quick start
 

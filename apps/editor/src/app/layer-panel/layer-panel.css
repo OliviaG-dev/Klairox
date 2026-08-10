@@ -1,0 +1,126 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.panel {
+  height: 100%;
+  overflow: auto;
+  padding: 1.5rem 1.25rem 2rem;
+  border-right: 1px solid var(--kx-border);
+  background: color-mix(in srgb, var(--kx-surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.panel__header {
+  margin-bottom: 1.75rem;
+}
+
+.panel__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--kx-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panel__header h2 {
+  margin: 0;
+  font-family: var(--kx-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.panel__meta {
+  margin: 0.4rem 0 0;
+  color: var(--kx-muted);
+  font-size: 0.875rem;
+}
+
+.layer {
+  margin-bottom: 1.35rem;
+}
+
+.layer--hidden {
+  opacity: 0.45;
+}
+
+.layer__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.layer__title h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.badge {
+  border: 1px solid var(--kx-border);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  color: var(--kx-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge--optional {
+  color: var(--kx-accent);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.option {
+  border: 1px solid var(--kx-border);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--kx-text);
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--kx-accent) 55%, var(--kx-border));
+  background: color-mix(in srgb, var(--kx-accent) 12%, transparent);
+}
+
+.option--active {
+  border-color: var(--kx-accent);
+  background: color-mix(in srgb, var(--kx-accent) 18%, transparent);
+  color: var(--kx-text);
+}
+
+.option--disabled,
+.option:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.panel__error {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, #c45c4a 50%, var(--kx-border));
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, #c45c4a 12%, transparent);
+  color: #f0c4bc;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}

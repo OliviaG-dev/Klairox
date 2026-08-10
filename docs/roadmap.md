@@ -50,14 +50,16 @@ Users should open a project, not a plugin.
 
 ### Phase 6 — Web editor
 
-Only worth building once the engine is stable, which is the point of doing it last.
+Started. Angular app at `apps/editor`, driven by `@klairox/core/browser` and the
+horse plugin served as static assets.
 
-- Angular application consuming `@klairox/core` directly, driven by the event bus.
-- Layer panel generated from the manifest, with disabled options greyed out live.
-- Real-time preview: the plan is already cheap to recompute, so the preview can be immediate.
-- Undo/redo over the selection, drag-and-drop layer reordering, dark mode.
-- A browser renderer (Canvas or WebGL) implementing the same `Renderer` port, so the editor
-  previews without a server round trip.
+- [x] Angular application scaffolded in the monorepo
+- [x] Layer panel generated from the manifest, with disabled options greyed out live
+- [x] Real-time preview via stacked `<img>` layers (temporary; plan recompute is live)
+- [ ] Undo/redo over the selection, drag-and-drop layer reordering, dark mode
+- [ ] A browser renderer (Canvas or WebGL) implementing the same `Renderer` port, so the editor
+      previews without a server round trip
+- [ ] Load arbitrary plugins over HTTP (virtual file system), not only the bundled horse example
 
 ### Phase 7 — Open source release
 

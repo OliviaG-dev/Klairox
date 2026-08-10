@@ -1,5 +1,9 @@
 # Klairox
 
+<p align="center">
+  <img src="docs/images/brand/lockup-dark.png" alt="Klairox" width="420" />
+</p>
+
 **Un framework de composition d'assets 2D piloté par les données et extensible par plugins.**
 
 [![CI](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml/badge.svg)](https://github.com/OliviaG-dev/Klairox/actions/workflows/ci.yml)
@@ -48,8 +52,12 @@ d'armes.
 ## État du projet
 
 Jeune mais fonctionnel. Le moteur, le système de règles, les matrices de variantes et la CLI
-sont implémentés et testés de bout en bout. L'éditeur web n'est pas encore construit — voir la
-[roadmap](docs/roadmap.md).
+sont implémentés et testés de bout en bout. L'éditeur web est en cours dans `apps/editor` —
+voir la [roadmap](docs/roadmap.md).
+
+```bash
+npm run editor
+```
 
 ## Démarrage rapide
 

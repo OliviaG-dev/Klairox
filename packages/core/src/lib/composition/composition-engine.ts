@@ -1,5 +1,6 @@
 import { KlairoxError } from '../errors.js';
-import { pluginAssetPath, type LoadedPlugin } from '../plugin/plugin-loader.js';
+import { pluginAssetPath } from '../plugin/plugin-loader.js';
+import type { LoadedPlugin } from '../plugin/plugin.types.js';
 import { compareLayers } from '../selection/resolution-order.js';
 import { resolveSelection } from '../selection/resolve-selection.js';
 import type { SelectionInput } from '../selection/selection.types.js';

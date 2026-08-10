@@ -1,0 +1,31 @@
+<section class="preview">
+  <header class="preview__header">
+    <p class="preview__eyebrow">Live preview</p>
+    <h2>Composition</h2>
+    <p class="preview__hint">
+      Stacked layer images — Canvas/WebGL renderer comes next.
+    </p>
+  </header>
+
+  @if (session.plugin(); as plugin) {
+  <div
+    class="stage"
+    [style.width.px]="plugin.manifest.canvas.width"
+    [style.height.px]="plugin.manifest.canvas.height"
+  >
+    @for (layer of session.previewLayers(); track layer.layerId) {
+    <img
+      class="stage__layer"
+      [src]="layer.url"
+      [alt]="layer.layerId + ':' + layer.optionId"
+      [style.opacity]="layer.opacity"
+      [style.left.px]="layer.offsetX"
+      [style.top.px]="layer.offsetY"
+      [style.zIndex]="layer.order"
+    />
+    }
+  </div>
+  } @else {
+  <p class="preview__empty">Load a plugin to preview composition.</p>
+  }
+</section>

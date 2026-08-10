@@ -1,0 +1,86 @@
+{
+  "name": "editor",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "kx",
+  "sourceRoot": "apps/editor/src",
+  "tags": ["type:app", "scope:editor"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/editor/tsconfig.app.json --noEmit --pretty"
+      },
+      "dependsOn": ["^build"]
+    },
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/editor",
+        "browser": "apps/editor/src/main.ts",
+        "tsConfig": "apps/editor/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/editor/public"
+          },
+          {
+            "glob": "**/*",
+            "input": "plugins/horse",
+            "output": "plugins/horse"
+          }
+        ],
+        "styles": ["apps/editor/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "configurations": {
+        "production": {
+          "buildTarget": "editor:build:production"
+        },
+        "development": {
+          "buildTarget": "editor:build:development"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "editor:build",
+        "staticFilePath": "dist/apps/editor/browser",
+        "spa": true
+      }
+    }
+  }
+}

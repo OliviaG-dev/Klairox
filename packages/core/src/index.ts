@@ -14,6 +14,7 @@ export * from './lib/export/metadata.js';
 export * from './lib/plugin/asset-path.js';
 export * from './lib/plugin/manifest-source.js';
 export * from './lib/plugin/plugin-loader.js';
+export * from './lib/plugin/plugin.types.js';
 export * from './lib/render/renderer.types.js';
 export * from './lib/render/to-render-request.js';
 export * from './lib/rules/rule-engine.js';

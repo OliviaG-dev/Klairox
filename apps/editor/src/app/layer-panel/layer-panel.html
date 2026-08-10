@@ -1,0 +1,52 @@
+@if (session.plugin(); as plugin) {
+<aside class="panel">
+  <header class="panel__header">
+    <p class="panel__eyebrow">Plugin</p>
+    <h2>{{ plugin.manifest.title }}</h2>
+    <p class="panel__meta">
+      v{{ plugin.manifest.version }} · {{ plugin.manifest.layers.length }}
+      layers
+    </p>
+  </header>
+
+  @for (layer of plugin.manifest.layers; track layer.id) {
+  <section class="layer" [class.layer--hidden]="session.isHidden(layer.id)">
+    <div class="layer__title">
+      <h3>{{ layer.title }}</h3>
+      @if (session.isHidden(layer.id)) {
+      <span class="badge">hidden</span>
+      } @else if (!layer.required) {
+      <span class="badge badge--optional">optional</span>
+      }
+    </div>
+
+    <div class="options" role="radiogroup" [attr.aria-label]="layer.title">
+      @if (!layer.required) {
+      <button
+        type="button"
+        class="option"
+        [class.option--active]="session.selection()[layer.id] === undefined"
+        [disabled]="session.isHidden(layer.id)"
+        (click)="session.selectOption(layer.id, null)"
+      >
+        None
+      </button>
+      } @for (option of layer.options; track option.id) {
+      <button
+        type="button"
+        class="option"
+        [class.option--active]="session.selection()[layer.id] === option.id"
+        [class.option--disabled]="session.isDisabled(layer.id, option.id)"
+        [disabled]="session.isHidden(layer.id) || session.isDisabled(layer.id, option.id)"
+        (click)="session.selectOption(layer.id, option.id)"
+      >
+        {{ option.title }}
+      </button>
+      }
+    </div>
+  </section>
+  } @if (session.selectionError(); as error) {
+  <p class="panel__error" role="alert">{{ error }}</p>
+  }
+</aside>
+}

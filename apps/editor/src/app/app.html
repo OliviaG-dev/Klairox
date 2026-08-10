@@ -1,0 +1,30 @@
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <img
+        class="brand__mark"
+        src="/brand/mark-dark.png"
+        width="32"
+        height="32"
+        alt=""
+      />
+      <div>
+        <p class="brand__name">Klairox</p>
+        <p class="brand__tag">Asset editor</p>
+      </div>
+    </div>
+
+    @if (session.loading()) {
+    <p class="topbar__status">Loading horse plugin…</p>
+    } @else if (session.loadError(); as error) {
+    <p class="topbar__status topbar__status--error" role="alert">{{ error }}</p>
+    } @else if (session.plugin(); as plugin) {
+    <p class="topbar__status">{{ plugin.manifest.description }}</p>
+    }
+  </header>
+
+  <main class="workspace">
+    <kx-layer-panel />
+    <kx-preview />
+  </main>
+</div>

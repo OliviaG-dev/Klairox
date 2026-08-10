@@ -15,4 +15,6 @@ const DEST = path.join(ROOT, 'apps', 'editor', 'public', 'plugins', 'horse');
 await rm(DEST, { recursive: true, force: true });
 await mkdir(path.dirname(DEST), { recursive: true });
 await cp(SRC, DEST, { recursive: true });
-console.log(`Synced ${path.relative(ROOT, SRC)} → ${path.relative(ROOT, DEST)}`);
+console.log(
+  `Synced ${path.relative(ROOT, SRC)} → ${path.relative(ROOT, DEST)}`,
+);

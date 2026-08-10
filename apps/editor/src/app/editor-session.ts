@@ -194,7 +194,6 @@ function assetUrl(rootDir: string, asset: string): string {
   return `${base}${asset.replace(/^\//, '')}?v=tail-hybrid-v1`;
 }
 
-
 function errorMessage(error: unknown): string {
   if (isKlairoxError(error)) {
     return error.format();

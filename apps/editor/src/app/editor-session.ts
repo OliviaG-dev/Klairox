@@ -190,8 +190,7 @@ function toLoadedPlugin(
 
 function assetUrl(rootDir: string, asset: string): string {
   const base = rootDir.endsWith('/') ? rootDir : `${rootDir}/`;
-  // Bust browser cache when plugin artwork is replaced during local iteration.
-  return `${base}${asset.replace(/^\//, '')}?v=tail-hybrid-v1`;
+  return `${base}${asset.replace(/^\//, '')}`;
 }
 
 function errorMessage(error: unknown): string {

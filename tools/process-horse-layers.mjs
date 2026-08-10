@@ -187,10 +187,6 @@ async function main() {
     path.join(OUT, 'body/standard.png'),
   );
   await chromaKeyGreen(
-    A('horse-body-heavy-greenscreen.png'),
-    path.join(OUT, 'body/heavy.png'),
-  );
-  await chromaKeyGreen(
     A('horse-coat-bay-greenscreen.png'),
     path.join(OUT, 'coat/bay.png'),
   );

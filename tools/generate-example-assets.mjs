@@ -47,12 +47,15 @@ function silhouette(fill, bulk = 1) {
 
 const ASSETS = {
   'layers/body/standard.png': silhouette('#c9b8a1'),
-  'layers/body/heavy.png': silhouette('#c9b8a1', 1.08),
 
   'layers/coat/bay.png': silhouette('#7b4a2d'),
   'layers/coat/black.png': silhouette('#33302c'),
   'layers/coat/grey.png': silhouette('#b9b6b0'),
   'layers/coat/chestnut.png': silhouette('#a45a25'),
+  'layers/coat/roan.png': silhouette('#8a5a48'),
+  'layers/coat/palomino.png': silhouette('#d4a84b'),
+  'layers/coat/dun.png': silhouette('#c4a06a'),
+  'layers/coat/cream.png': silhouette('#e8dcc0'),
 
   'layers/mane/short.png': `<path d="M320 250 L370 156 L392 164 L344 258 Z" fill="${MANE_COLOR}" />`,
   'layers/mane/long.png': `<path d="M314 258 L366 152 L396 162 L352 262 L338 296 L314 288 Z" fill="${MANE_COLOR}" />`,

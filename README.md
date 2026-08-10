@@ -136,8 +136,9 @@ A plugin is a directory containing a manifest and some images. No build step, no
 plugins/horse/
   plugin.json
   layers/
-    body/      standard.png  heavy.png
+    body/      standard.png
     coat/      bay.png  black.png  chestnut.png  grey.png
+               roan.png  palomino.png  dun.png  cream.png
     mane/      short.png  long.png
     markings/  blaze.png  star.png
     equipment/ saddle.png  armor.png
@@ -155,7 +156,7 @@ plugins/horse/
       "order": 20,
       "required": true,
       "dependsOn": ["body"],
-      "opacity": 0.9,
+      "opacity": 1,
       "options": [
         { "id": "bay", "asset": "layers/coat/bay.png" },
         { "id": "grey", "asset": "layers/coat/grey.png" },

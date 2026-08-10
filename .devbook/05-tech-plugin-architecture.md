@@ -33,7 +33,7 @@ Les couches sont parcourues en ordre **`dependsOn`**, pas en ordre de peinture :
 2. pour chaque couche : évaluer les contraintes sur la sélection _déjà_ résolue ; appliquer choix utilisateur ou défaut ; sinon laisser vide si optionnelle
 3. revalider les `require` sur la sélection finale
 
-Ainsi, « body = heavy » peut restreindre les coats aval **sans code** dans le plugin.
+Ainsi, « coat = cream » peut restreindre les markings aval **sans code** dans le plugin.
 
 #### `order` vs `dependsOn`
 

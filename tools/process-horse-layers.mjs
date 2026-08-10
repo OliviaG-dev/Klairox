@@ -1,17 +1,20 @@
 /**
  * Builds horse plugin layers from chroma-key (green screen) artwork.
  *
+ * Source folder (override with KLAIROX_HORSE_ASSETS):
+ *   docs/images/horse-source/
+ *
  * Usage: node tools/process-horse-layers.mjs
  */
-import { mkdir } from 'node:fs/promises';
+import { access, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ASSETS = path.resolve(
-  process.env.USERPROFILE ?? '',
-  '.cursor/projects/e-Projet-Klairox-klairox/assets',
+  process.env.KLAIROX_HORSE_ASSETS ??
+    path.join(ROOT, 'docs/images/horse-source'),
 );
 const OUT = path.join(ROOT, 'plugins/horse/layers');
 const SIZE = 512;
@@ -179,6 +182,17 @@ async function writeEmptyLayer(dest) {
 }
 
 async function main() {
+  try {
+    await access(ASSETS);
+  } catch {
+    console.error(
+      `Horse source folder not found: ${path.relative(ROOT, ASSETS)}\n` +
+        'Set KLAIROX_HORSE_ASSETS to the directory that holds the greenscreen PNGs.',
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const A = (name) => path.join(ASSETS, name);
   await mkdir(OUT, { recursive: true });
 

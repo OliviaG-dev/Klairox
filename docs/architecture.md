@@ -60,8 +60,8 @@ stacking order, and constraints are re-evaluated at each step:
 3. Re-evaluate the constraints on the finished selection and reject unmet `require` rules.
 
 Because upstream layers are resolved first, a constraint triggered by an upstream choice is
-already in force when the engine picks a downstream default. Choosing the heavy build can
-therefore change which coats are offered, without the plugin containing a line of code.
+already in force when the engine picks a downstream default. Choosing a cream coat can
+therefore change which markings are offered, without the plugin containing a line of code.
 
 Within the constraints imposed by `dependsOn`, resolution follows the `order` the author
 declared, so the behaviour matches what someone reading the manifest top to bottom expects.

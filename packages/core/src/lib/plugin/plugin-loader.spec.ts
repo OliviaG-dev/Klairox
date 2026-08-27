@@ -55,7 +55,23 @@ describe('loadPlugin', () => {
     expect(plugin.manifest.name).toBe('horse');
     expect(plugin.manifest.layers).toHaveLength(5);
     expect(plugin.manifest.constraints).toHaveLength(4);
+    expect(plugin.index.layers.get('coat')?.blendMode).toBe('normal');
+    expect(
+      plugin.index.layers.get('body')?.options.map((o) => o.id),
+    ).toEqual(['standard', 'foal']);
+    expect(plugin.index.layers.get('body')?.options[0]?.title).toBe(
+      'Standard',
+    );
     expect(plugin.index.layers.get('coat')?.options).toHaveLength(8);
+    expect(
+      plugin.index.layers.get('coat')?.options.map((o) => o.id),
+    ).toContain('isabelle');
+    expect(
+      plugin.index.layers.get('coat')?.options.map((o) => o.id),
+    ).not.toContain('dun');
+    expect(
+      plugin.index.layers.get('coat')?.options.map((o) => o.id),
+    ).not.toContain('bay-brun');
   });
 
   it('reads a YAML manifest', async () => {

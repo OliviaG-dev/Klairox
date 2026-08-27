@@ -46,16 +46,24 @@ describe('SharpRenderer', () => {
     await rm(workDir, { recursive: true, force: true });
   });
 
-  async function writeSquare(name: string, size: number): Promise<string> {
+  async function writeColor(
+    name: string,
+    size: number,
+    background: { r: number; g: number; b: number; alpha: number },
+  ): Promise<string> {
     const filePath = path.join(workDir, name);
     const png = await sharp({
-      create: { width: size, height: size, channels: 4, background: RED },
+      create: { width: size, height: size, channels: 4, background },
     })
       .png()
       .toBuffer();
 
     await writeFile(filePath, png);
     return filePath;
+  }
+
+  async function writeSquare(name: string, size: number): Promise<string> {
+    return writeColor(name, size, RED);
   }
 
   function layer(
@@ -120,6 +128,31 @@ describe('SharpRenderer', () => {
     });
 
     expect((await readPixel(output, 0, 0)).a).toBeCloseTo(128, -1);
+  });
+
+  it('multiplies a tint over a light base', async () => {
+    const base = await writeColor('white-16.png', 16, {
+      r: 200,
+      g: 200,
+      b: 200,
+      alpha: 1,
+    });
+    const tint = await writeColor('bay-tint-16.png', 16, {
+      r: 128,
+      g: 64,
+      b: 32,
+      alpha: 1,
+    });
+    const output = await renderer.render({
+      ...request(),
+      layers: [layer(base), layer(tint, { blendMode: 'multiply' })],
+    });
+
+    const pixel = await readPixel(output, 0, 0);
+    expect(pixel.r).toBeCloseTo(100, -1);
+    expect(pixel.g).toBeCloseTo(50, -1);
+    expect(pixel.b).toBeCloseTo(25, -1);
+    expect(pixel.a).toBe(255);
   });
 
   it('encodes to webp when asked', async () => {

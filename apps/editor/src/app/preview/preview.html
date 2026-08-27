@@ -3,7 +3,7 @@
     <p class="preview__eyebrow">Live preview</p>
     <h2>Composition</h2>
     <p class="preview__hint">
-      Stacked layer images — Canvas/WebGL renderer comes next.
+      Canvas compositing — same blend stack as the Sharp renderer.
     </p>
   </header>
 
@@ -13,18 +13,8 @@
     [style.width.px]="plugin.manifest.canvas.width"
     [style.height.px]="plugin.manifest.canvas.height"
   >
-    @for (layer of session.previewLayers(); track layer.layerId + ':' +
-    layer.optionId) {
-    <img
-      class="stage__layer"
-      [src]="layer.url"
-      [alt]="layer.layerId + ':' + layer.optionId"
-      [style.opacity]="layer.opacity"
-      [style.left.px]="layer.offsetX"
-      [style.top.px]="layer.offsetY"
-      [style.zIndex]="layer.order"
-    />
-    }
+    <canvas #stageCanvas class="stage__canvas" aria-label="Composition preview">
+    </canvas>
   </div>
   } @else {
   <p class="preview__empty">Load a plugin to preview composition.</p>

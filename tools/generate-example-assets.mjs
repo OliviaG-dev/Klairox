@@ -9,7 +9,7 @@
  *
  * Usage: node tools/generate-example-assets.mjs
  *
- * Safety: refuses to overwrite if `docs/images/horse-base/master-3q-darkbay.png` exists,
+ * Safety: refuses to overwrite if `docs/images/horse-base/morphology-master.png` exists,
  * unless FORCE_PLACEHOLDER_ASSETS=1 is set.
  */
 import { access, mkdir, writeFile } from 'node:fs/promises';
@@ -22,7 +22,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN_DIR = path.join(ROOT, 'plugins', 'horse');
 const REALISTIC_MASTER = path.join(
   ROOT,
-  'docs/images/horse-base/master-3q-darkbay.png',
+  'docs/images/horse-base/morphology-master.png',
 );
 
 const MANE_COLOR = '#3b2a1d';
@@ -46,15 +46,13 @@ function silhouette(fill, bulk = 1) {
 }
 
 const ASSETS = {
-  'layers/body/standard.png': silhouette('#c9b8a1'),
-
   'layers/coat/bay.png': silhouette('#7b4a2d'),
   'layers/coat/black.png': silhouette('#33302c'),
   'layers/coat/grey.png': silhouette('#b9b6b0'),
   'layers/coat/chestnut.png': silhouette('#a45a25'),
   'layers/coat/roan.png': silhouette('#8a5a48'),
   'layers/coat/palomino.png': silhouette('#d4a84b'),
-  'layers/coat/dun.png': silhouette('#c4a06a'),
+  'layers/coat/isabelle.png': silhouette('#d2b48c'),
   'layers/coat/cream.png': silhouette('#e8dcc0'),
 
   'layers/mane/short.png': `<path d="M320 250 L370 156 L392 164 L344 258 Z" fill="${MANE_COLOR}" />`,

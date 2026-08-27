@@ -25,9 +25,9 @@ const BACKGROUND = { r: 250, g: 249, b: 246, alpha: 1 };
 
 const VARIANTS = [
   { label: 'bay (default)', selection: {} },
+  { label: 'black', selection: { coat: 'black' } },
   { label: 'grey', selection: { coat: 'grey' } },
-  { label: 'palomino', selection: { coat: 'palomino' } },
-  { label: 'cream + armour', selection: { coat: 'cream', equipment: 'armor' } },
+  { label: 'isabelle', selection: { coat: 'isabelle' } },
 ];
 
 function labelSvg(text, width) {

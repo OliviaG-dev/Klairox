@@ -26,7 +26,6 @@
         type="button"
         class="option"
         [class.option--active]="session.selection()[layer.id] === undefined"
-        [disabled]="session.isHidden(layer.id)"
         (click)="session.selectOption(layer.id, null)"
       >
         None
@@ -37,7 +36,7 @@
         class="option"
         [class.option--active]="session.selection()[layer.id] === option.id"
         [class.option--disabled]="session.isDisabled(layer.id, option.id)"
-        [disabled]="session.isHidden(layer.id) || session.isDisabled(layer.id, option.id)"
+        [disabled]="session.isDisabled(layer.id, option.id)"
         (click)="session.selectOption(layer.id, option.id)"
       >
         {{ option.title }}

@@ -196,10 +196,9 @@ async function main() {
   const A = (name) => path.join(ASSETS, name);
   await mkdir(OUT, { recursive: true });
 
-  await chromaKeyGreen(
-    A('horse-body-standard-greenscreen.png'),
-    path.join(OUT, 'body/standard.png'),
-  );
+  for (const rel of ['body/standard.png', 'body/foal.png']) {
+    await writeEmptyLayer(path.join(OUT, rel));
+  }
   await chromaKeyGreen(
     A('horse-coat-bay-greenscreen.png'),
     path.join(OUT, 'coat/bay.png'),
@@ -227,8 +226,8 @@ async function main() {
     { erode: 1 },
   );
   await chromaKeyGreen(
-    A('horse-coat-dun-greenscreen.png'),
-    path.join(OUT, 'coat/dun.png'),
+    A('horse-coat-isabelle-greenscreen.png'),
+    path.join(OUT, 'coat/isabelle.png'),
   );
   await chromaKeyGreen(
     A('horse-coat-cream-greenscreen.png'),

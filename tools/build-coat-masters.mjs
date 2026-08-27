@@ -166,7 +166,12 @@ async function paint(data, width, height, name) {
     }
 
     const l = luma(data[i], data[i + 1], data[i + 2]);
-    const body = shade(l, palette.body.shadow, palette.body.mid, palette.body.high);
+    const body = shade(
+      l,
+      palette.body.shadow,
+      palette.body.mid,
+      palette.body.high,
+    );
     const pts = shade(
       l,
       palette.points.shadow,

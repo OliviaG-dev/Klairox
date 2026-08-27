@@ -40,7 +40,7 @@ function clayFromLuma(l) {
   return [
     Math.round(clamp(v * 1.04)),
     Math.round(clamp(v * 0.98)),
-    Math.round(clamp(v * 0.90)),
+    Math.round(clamp(v * 0.9)),
   ];
 }
 
@@ -85,7 +85,8 @@ async function matteMorphology(src) {
     let fringe = false;
     const x = p % width;
     const y = (p / width) | 0;
-    if (x === 0 || y === 0 || x === width - 1 || y === height - 1) fringe = true;
+    if (x === 0 || y === 0 || x === width - 1 || y === height - 1)
+      fringe = true;
     else {
       for (const [dx, dy] of [
         [-1, 0],

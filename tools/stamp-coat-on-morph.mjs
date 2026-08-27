@@ -41,7 +41,12 @@ async function upscaleMorph(data, width, height) {
     .toBuffer({ resolveWithObject: true });
 }
 
-function smoothCoat(data, width, height, { radius = 3, lumaTol = 9, passes = 2 } = {}) {
+function smoothCoat(
+  data,
+  width,
+  height,
+  { radius = 3, lumaTol = 9, passes = 2 } = {},
+) {
   let src = data;
   for (let pass = 0; pass < passes; pass++) {
     const next = Buffer.from(src);
@@ -237,8 +242,12 @@ function closeGroinCrack(data, width, height) {
         const t = (x - gapFrom + 1) / (gap + 1);
         const i = (y * width + x) * 4;
         data[i] = Math.round(data[left] + (data[right] - data[left]) * t);
-        data[i + 1] = Math.round(data[left + 1] + (data[right + 1] - data[left + 1]) * t);
-        data[i + 2] = Math.round(data[left + 2] + (data[right + 2] - data[left + 2]) * t);
+        data[i + 1] = Math.round(
+          data[left + 1] + (data[right + 1] - data[left + 1]) * t,
+        );
+        data[i + 2] = Math.round(
+          data[left + 2] + (data[right + 2] - data[left + 2]) * t,
+        );
         data[i + 3] = 255;
         filled++;
       }
@@ -290,7 +299,9 @@ async function main() {
   const src = path.resolve(process.argv[2] ?? '');
   const name = process.argv[3] ?? 'bay';
   if (!src) {
-    console.error('Usage: node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>');
+    console.error(
+      'Usage: node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>',
+    );
     process.exitCode = 1;
     return;
   }

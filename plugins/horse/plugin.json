@@ -3,7 +3,7 @@
   "name": "horse",
   "version": "1.0.0",
   "title": "Horse",
-  "description": "Reference plugin: a layered horse assembled from chroma-keyed coat artwork.",
+  "description": "Reference plugin: a layered horse assembled from photoreal coats on a shared silhouette.",
   "license": "MIT",
   "canvas": {
     "width": 512,

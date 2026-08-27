@@ -27,7 +27,7 @@ that description alone.
 Write a manifest, drop in your artwork, and you have a working asset generator without
 touching the engine.
 
-![Four horse variants generated from the same plugin](docs/images/horse-preview.png)
+![Horse coat variants generated from the same plugin](docs/images/horse-preview.png)
 
 _Four assets produced from one plugin. With `klairox batch`, the same plugin can emit a full
 matrix of combinations. The artwork is deliberately schematic: placeholder shapes keep the
@@ -137,8 +137,8 @@ plugins/horse/
   plugin.json
   layers/
     body/      standard.png
-    coat/      bay.png  black.png  chestnut.png  grey.png
-               roan.png  palomino.png  dun.png  cream.png
+    coat/      bay.png  bay-brun.png  black.png  chestnut.png  grey.png
+               roan.png  palomino.png  isabelle.png  cream.png
     mane/      short.png  long.png
     markings/  blaze.png  star.png
     equipment/ saddle.png  armor.png

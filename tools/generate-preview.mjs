@@ -24,10 +24,15 @@ const LABEL_HEIGHT = 34;
 const BACKGROUND = { r: 250, g: 249, b: 246, alpha: 1 };
 
 const VARIANTS = [
+  { label: 'bay', selection: {} },
+  { label: 'bay-brun', selection: { coat: 'bay-brun' } },
+  { label: 'black', selection: { coat: 'black' } },
+  { label: 'chestnut', selection: { coat: 'chestnut' } },
+  { label: 'grey', selection: { coat: 'grey' } },
   { label: 'roan', selection: { coat: 'roan' } },
   { label: 'palomino', selection: { coat: 'palomino' } },
-  { label: 'cream', selection: { coat: 'cream' } },
   { label: 'isabelle', selection: { coat: 'isabelle' } },
+  { label: 'cream', selection: { coat: 'cream' } },
 ];
 
 function labelSvg(text, width) {

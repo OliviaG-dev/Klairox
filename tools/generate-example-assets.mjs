@@ -4,8 +4,8 @@
  * The shapes are intentionally schematic: the point of the example plugin is to show
  * how layers, constraints and dependencies compose, not to ship finished art.
  *
- * Prefer the realistic layer pipeline when available:
- *   node tools/process-horse-layers.mjs
+ * Prefer the realistic coat pipeline when available:
+ *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
  *
  * Usage: node tools/generate-example-assets.mjs
  *
@@ -79,7 +79,7 @@ async function main() {
       console.error(
         'Refusing to overwrite realistic horse layers.\n' +
           `Found ${path.relative(ROOT, REALISTIC_MASTER)}.\n` +
-          'Use: node tools/process-horse-layers.mjs\n' +
+          'Use: node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>\n' +
           'Or set FORCE_PLACEHOLDER_ASSETS=1 to restore placeholders.',
       );
       process.exitCode = 1;

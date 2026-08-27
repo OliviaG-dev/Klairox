@@ -27,7 +27,7 @@ la chaîne d'export à partir de cette seule description.
 Vous écrivez un manifeste, vous déposez vos images, et vous obtenez un générateur d'assets
 fonctionnel sans toucher au moteur.
 
-![Quatre variantes de cheval générées depuis le même plugin](docs/images/horse-preview.png)
+![Variantes de robe générées depuis le même plugin](docs/images/horse-preview.png)
 
 _Quatre assets produits à partir d'un seul plugin. Avec `klairox batch`, le même plugin peut
 émettre toute une matrice de combinaisons. Les visuels sont volontairement schématiques :
@@ -140,8 +140,8 @@ plugins/horse/
   plugin.json
   layers/
     body/      standard.png
-    coat/      bay.png  black.png  chestnut.png  grey.png
-               roan.png  palomino.png  dun.png  cream.png
+    coat/      bay.png  bay-brun.png  black.png  chestnut.png  grey.png
+               roan.png  palomino.png  isabelle.png  cream.png
     mane/      short.png  long.png
     markings/  blaze.png  star.png
     equipment/ saddle.png  armor.png

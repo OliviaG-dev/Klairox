@@ -86,8 +86,9 @@ Tout jusqu'au `CompositionPlan` est **synchrone, pur, sans I/O**. Recalculer un 
 plugins/horse/
   plugin.json
   layers/
-    body/      standard.png  heavy.png
+    body/      standard.png
     coat/      bay.png  black.png  chestnut.png  grey.png
+               roan.png  palomino.png  dun.png  cream.png
     ...
 ```
 

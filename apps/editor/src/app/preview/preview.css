@@ -40,6 +40,7 @@
 
 .stage {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   border: 1px solid var(--kx-border);
   border-radius: 0.75rem;
@@ -49,6 +50,14 @@
     #121816;
   box-shadow: 0 24px 60px rgb(0 0 0 / 35%);
   animation: stage-in 420ms ease both;
+}
+
+.stage__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: high-quality;
+  pointer-events: none;
 }
 
 .stage__layer {

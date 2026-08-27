@@ -24,13 +24,10 @@ const LABEL_HEIGHT = 34;
 const BACKGROUND = { r: 250, g: 249, b: 246, alpha: 1 };
 
 const VARIANTS = [
-  { label: 'defaults', selection: {} },
-  { label: 'grey + long mane', selection: { coat: 'grey', mane: 'long' } },
-  {
-    label: 'black + blaze + saddle',
-    selection: { coat: 'black', markings: 'blaze', equipment: 'saddle' },
-  },
-  { label: 'heavy + armour', selection: { body: 'heavy', equipment: 'armor' } },
+  { label: 'roan', selection: { coat: 'roan' } },
+  { label: 'palomino', selection: { coat: 'palomino' } },
+  { label: 'cream', selection: { coat: 'cream' } },
+  { label: 'isabelle', selection: { coat: 'isabelle' } },
 ];
 
 function labelSvg(text, width) {

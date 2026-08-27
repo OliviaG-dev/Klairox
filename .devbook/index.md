@@ -87,8 +87,8 @@ plugins/horse/
   plugin.json
   layers/
     body/      standard.png
-    coat/      bay.png  black.png  chestnut.png  grey.png
-               roan.png  palomino.png  dun.png  cream.png
+    coat/      bay.png  bay-brun.png  black.png  chestnut.png  grey.png
+               roan.png  palomino.png  isabelle.png  cream.png
     ...
 ```
 

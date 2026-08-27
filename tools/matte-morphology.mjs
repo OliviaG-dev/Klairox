@@ -81,8 +81,25 @@ async function matteMorphology(src) {
     const b = data[i + 2];
     let l = luma(r, g, b);
 
-    // Black fringe on a cream body is leftover key, not anatomy.
-    if (l < 18 && a > 200) {
+    // Only drop leftover key on the outer fringe, not interior creases.
+    let fringe = false;
+    const x = p % width;
+    const y = (p / width) | 0;
+    if (x === 0 || y === 0 || x === width - 1 || y === height - 1) fringe = true;
+    else {
+      for (const [dx, dy] of [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+      ]) {
+        if (data[((y + dy) * width + (x + dx)) * 4 + 3] < 16) {
+          fringe = true;
+          break;
+        }
+      }
+    }
+    if (l < 18 && a > 200 && fringe) {
       out[i] = out[i + 1] = out[i + 2] = out[i + 3] = 0;
       continue;
     }

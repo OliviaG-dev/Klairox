@@ -47,6 +47,7 @@ function silhouette(fill, bulk = 1) {
 
 const ASSETS = {
   'layers/coat/bay.png': silhouette('#7b4a2d'),
+  'layers/coat/bay-brun.png': silhouette('#5a3220'),
   'layers/coat/black.png': silhouette('#33302c'),
   'layers/coat/grey.png': silhouette('#b9b6b0'),
   'layers/coat/chestnut.png': silhouette('#a45a25'),

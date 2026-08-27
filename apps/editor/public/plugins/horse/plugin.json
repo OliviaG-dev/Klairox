@@ -44,6 +44,12 @@
           "tags": ["dark"]
         },
         {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
           "id": "black",
           "title": "Black",
           "asset": "layers/coat/black.png",
@@ -170,6 +176,12 @@
       "id": "palomino-coat-hides-star",
       "description": "A white star is hard to read against a pale palomino face",
       "when": { "coat": "palomino" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "isabelle-coat-hides-star",
+      "description": "A white star is hard to read against a pale isabelle face",
+      "when": { "coat": "isabelle" },
       "disable": ["markings:star"]
     }
   ],

@@ -349,13 +349,14 @@ function hoofMask(bay, width, height) {
       if (bay[(y * width + x) * 4 + 3] >= 16) colBot[x] = y;
     }
   }
-  const hoofH = 18 * (width / SIZE);
+  const hoofH = 11 * (width / SIZE);
+  const minBot = height * 0.905;
   for (let x = 0; x < width; x++) {
     const bot = colBot[x];
-    if (bot < height * 0.72) continue;
+    if (bot < minBot) continue;
     for (let y = Math.max(0, Math.round(bot - hoofH)); y <= bot; y++) {
       if (bay[(y * width + x) * 4 + 3] < 16) continue;
-      mask[y * width + x] = 1 - smoothstep(hoofH * 0.28, hoofH, bot - y);
+      mask[y * width + x] = 1 - smoothstep(hoofH * 0.4, hoofH, bot - y);
     }
   }
   return mask;
@@ -397,6 +398,12 @@ function paintOverlay(soft, palomino, bay, morph, width, height) {
       r = r * (1 - h) + hornR * h;
       g = g * (1 - h) + hornG * h;
       b = b * (1 - h) + hornB * h;
+    } else {
+      const warm = r - (g + b) * 0.5;
+      if (warm > 4) {
+        g += warm * 0.45;
+        b += warm * 0.7;
+      }
     }
     out[i] = clampByte(r);
     out[i + 1] = clampByte(g);

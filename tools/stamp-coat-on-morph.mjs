@@ -72,9 +72,16 @@ function pathsForBuild(build) {
     };
   }
   return {
-    morph: path.join(ROOT, 'docs/images/horse-base/morphology-master.png'),
+    morph: path.join(
+      ROOT,
+      'docs/images/horse-base/OC-Standard/morphology-master.png',
+    ),
     master: (name) =>
-      path.join(ROOT, 'docs/images/horse-base', `coat-master-${name}.png`),
+      path.join(
+        ROOT,
+        'docs/images/horse-base/OC-Standard',
+        `coat-master-${name}.png`,
+      ),
     plugin: (name) =>
       path.join(ROOT, 'plugins/horse/layers/coat', `${name}.png`),
     archive: (name) =>

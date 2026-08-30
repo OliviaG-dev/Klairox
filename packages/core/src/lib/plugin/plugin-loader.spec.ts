@@ -60,7 +60,9 @@ describe('loadPlugin', () => {
       'standard',
       'foal',
     ]);
-    expect(plugin.index.layers.get('body')?.options[0]?.title).toBe('Standard');
+    expect(plugin.index.layers.get('body')?.options[0]?.title).toBe(
+      'Standard-OC',
+    );
     expect(plugin.index.layers.get('coat')?.options).toHaveLength(9);
     expect(plugin.index.layers.get('coat-foal')?.options).toHaveLength(9);
     expect(plugin.index.layers.get('coat')?.options.map((o) => o.id)).toContain(

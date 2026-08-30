@@ -51,9 +51,16 @@ function parseArgs(argv) {
 function pathsForBuild(build) {
   if (build === 'foal') {
     return {
-      morph: path.join(ROOT, 'docs/images/horse-base/foal/morphology-master.png'),
+      morph: path.join(
+        ROOT,
+        'docs/images/horse-base/foal/morphology-master.png',
+      ),
       master: (name) =>
-        path.join(ROOT, 'docs/images/horse-base/foal', `coat-master-${name}.png`),
+        path.join(
+          ROOT,
+          'docs/images/horse-base/foal',
+          `coat-master-${name}.png`,
+        ),
       plugin: (name) =>
         path.join(ROOT, 'plugins/horse/layers/coat-foal', `${name}.png`),
       archive: (name) =>
@@ -71,7 +78,11 @@ function pathsForBuild(build) {
     plugin: (name) =>
       path.join(ROOT, 'plugins/horse/layers/coat', `${name}.png`),
     archive: (name) =>
-      path.join(ROOT, 'docs/images/horse-source', `coat-${name}-photoreal-src.png`),
+      path.join(
+        ROOT,
+        'docs/images/horse-source',
+        `coat-${name}-photoreal-src.png`,
+      ),
   };
 }
 

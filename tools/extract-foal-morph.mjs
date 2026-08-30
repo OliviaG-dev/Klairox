@@ -13,7 +13,10 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DEST = path.join(ROOT, 'docs/images/horse-base/foal/morphology-master.png');
+const DEST = path.join(
+  ROOT,
+  'docs/images/horse-base/foal/morphology-master.png',
+);
 const SOURCE_DIR = path.join(ROOT, 'docs/images/horse-source/foal');
 const LIGHT_COATS = [
   'coat-cream-photoreal-src.png',
@@ -116,7 +119,8 @@ function bridgeGaps(mask, width, height, maxGap, alongY) {
       while (b < secondary && !sample(out, width, a, b, alongY)) b++;
       const gapEnd = b;
       const gap = gapEnd - gapStart;
-      const before = gapStart > 0 && sample(out, width, a, gapStart - 1, alongY);
+      const before =
+        gapStart > 0 && sample(out, width, a, gapStart - 1, alongY);
       const after = gapEnd < secondary && sample(out, width, a, gapEnd, alongY);
       if (before && after && gap > 0 && gap <= maxGap) {
         for (let i = gapStart; i < gapEnd; i++) {
@@ -192,7 +196,10 @@ async function main() {
   const images = await Promise.all(
     LIGHT_COATS.map(async (file) => {
       const src = path.join(SOURCE_DIR, file);
-      return sharp(src).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      return sharp(src)
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
     }),
   );
 

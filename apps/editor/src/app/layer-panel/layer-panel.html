@@ -9,7 +9,7 @@
     </p>
   </header>
 
-  @for (layer of plugin.manifest.layers; track layer.id) {
+  @for (layer of layers(); track layer.id) {
   <section class="layer" [class.layer--hidden]="session.isHidden(layer.id)">
     <div class="layer__title">
       <h3>{{ layer.title }}</h3>

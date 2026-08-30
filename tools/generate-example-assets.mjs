@@ -6,6 +6,7 @@
  *
  * Prefer the realistic coat pipeline when available:
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
+ *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> --build foal
  *
  * Usage: node tools/generate-example-assets.mjs
  *

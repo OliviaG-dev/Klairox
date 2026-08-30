@@ -78,4 +78,21 @@ describe('buildCompositionPlan', () => {
     expect(plan.layers.map((layer) => layer.layerId)).toContain('coat');
     expect(coat?.blendMode).toBe('normal');
   });
+
+  it('paints foal coats instead of adult coats for the foal build', async () => {
+    const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
+    const plan = buildCompositionPlan(plugin, {
+      body: 'foal',
+      'coat-foal': 'chestnut',
+    });
+    const painted = plan.layers.map((layer) => layer.layerId);
+
+    expect(plan.selection.body).toBe('foal');
+    expect(plan.hiddenLayers).toEqual(expect.arrayContaining(['body', 'coat']));
+    expect(painted).toContain('coat-foal');
+    expect(painted).not.toContain('coat');
+    expect(
+      plan.layers.find((layer) => layer.layerId === 'coat-foal')?.assetPath,
+    ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/coat-foal/chestnut.png'));
+  });
 });

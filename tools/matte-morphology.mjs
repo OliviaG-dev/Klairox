@@ -10,7 +10,7 @@
  *   node tools/matte-morphology.mjs [source.png]
  *
  * Output:
- *   docs/images/horse-base/morphology-master.png
+ *   docs/images/horse-base/OC-Standard/morphology-master.png
  */
 import { access, mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -23,7 +23,10 @@ const DEFAULT_SRC = path.join(
   'docs/images/horse-source/morphology-master-cream-src.png',
 );
 const SRC = path.resolve(process.argv[2] ?? DEFAULT_SRC);
-const OUT = path.join(ROOT, 'docs/images/horse-base/morphology-master.png');
+const OUT = path.join(
+  ROOT,
+  'docs/images/horse-base/OC-Standard/morphology-master.png',
+);
 const SIZE = 512;
 
 function luma(r, g, b) {

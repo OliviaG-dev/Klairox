@@ -6,10 +6,11 @@
  *
  * Prefer the realistic coat pipeline when available:
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
+ *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> --build foal
  *
  * Usage: node tools/generate-example-assets.mjs
  *
- * Safety: refuses to overwrite if `docs/images/horse-base/morphology-master.png` exists,
+ * Safety: refuses to overwrite if `docs/images/horse-base/OC-Standard/morphology-master.png` exists,
  * unless FORCE_PLACEHOLDER_ASSETS=1 is set.
  */
 import { access, mkdir, writeFile } from 'node:fs/promises';
@@ -22,7 +23,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN_DIR = path.join(ROOT, 'plugins', 'horse');
 const REALISTIC_MASTER = path.join(
   ROOT,
-  'docs/images/horse-base/morphology-master.png',
+  'docs/images/horse-base/OC-Standard/morphology-master.png',
 );
 
 const MANE_COLOR = '#3b2a1d';

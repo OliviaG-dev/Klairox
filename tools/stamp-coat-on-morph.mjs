@@ -7,6 +7,10 @@
  *
  * Usage:
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
+ *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> --build foal
+ *
+ * Rebuild the foal silhouette (legs/tail) before stamping:
+ *   node tools/extract-foal-morph.mjs
  */
 import { access, copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -14,9 +18,80 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const MORPH = path.join(ROOT, 'docs/images/horse-base/morphology-master.png');
 const SIZE = 512;
 const WORK = 1024;
+
+function parseArgs(argv) {
+  let build = 'standard';
+  let syncEditor = true;
+  const positional = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--build') {
+      build = argv[++i] ?? '';
+      continue;
+    }
+    if (arg === '--no-sync') {
+      syncEditor = false;
+      continue;
+    }
+    positional.push(arg);
+  }
+  if (build !== 'standard' && build !== 'foal') {
+    throw new Error('Unknown --build (expected standard or foal)');
+  }
+  return {
+    build,
+    syncEditor,
+    src: positional[0] ? path.resolve(positional[0]) : '',
+    name: positional[1] ?? 'bay',
+  };
+}
+
+function pathsForBuild(build) {
+  if (build === 'foal') {
+    return {
+      morph: path.join(
+        ROOT,
+        'docs/images/horse-base/foal/morphology-master.png',
+      ),
+      master: (name) =>
+        path.join(
+          ROOT,
+          'docs/images/horse-base/foal',
+          `coat-master-${name}.png`,
+        ),
+      plugin: (name) =>
+        path.join(ROOT, 'plugins/horse/layers/coat-foal', `${name}.png`),
+      archive: (name) =>
+        path.join(
+          ROOT,
+          'docs/images/horse-source/foal',
+          `coat-${name}-photoreal-src.png`,
+        ),
+    };
+  }
+  return {
+    morph: path.join(
+      ROOT,
+      'docs/images/horse-base/OC-Standard/morphology-master.png',
+    ),
+    master: (name) =>
+      path.join(
+        ROOT,
+        'docs/images/horse-base/OC-Standard',
+        `coat-master-${name}.png`,
+      ),
+    plugin: (name) =>
+      path.join(ROOT, 'plugins/horse/layers/coat', `${name}.png`),
+    archive: (name) =>
+      path.join(
+        ROOT,
+        'docs/images/horse-source',
+        `coat-${name}-photoreal-src.png`,
+      ),
+  };
+}
 
 function luma(r, g, b) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
@@ -296,35 +371,43 @@ function gradeBlack(data, width, height) {
 }
 
 async function main() {
-  const src = path.resolve(process.argv[2] ?? '');
-  const name = process.argv[3] ?? 'bay';
+  let parsed;
+  try {
+    parsed = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+    return;
+  }
+  const { src, name, build, syncEditor } = parsed;
+  const dests = pathsForBuild(build);
   if (!src) {
     console.error(
-      'Usage: node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>',
+      'Usage: node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> [--build foal]',
     );
     process.exitCode = 1;
     return;
   }
   try {
     await access(src);
-    await access(MORPH);
+    await access(dests.morph);
   } catch {
     console.error('Missing source or morphology master.');
     process.exitCode = 1;
     return;
   }
 
-  const morph = await sharp(MORPH).ensureAlpha().raw().toBuffer({
+  const morph = await sharp(dests.morph).ensureAlpha().raw().toBuffer({
     resolveWithObject: true,
   });
   const { width, height } = morph.info;
   const healed =
     fillInteriorHoles(morph.data, width, height) +
-    closeGroinCrack(morph.data, width, height);
-  if (healed > 0) {
+    (build === 'standard' ? closeGroinCrack(morph.data, width, height) : 0);
+  if (healed > 0 && build === 'standard') {
     await sharp(morph.data, { raw: { width, height, channels: 4 } })
       .png({ compressionLevel: 9 })
-      .toFile(MORPH);
+      .toFile(dests.morph);
     console.log('healed morphology holes', healed);
   }
   const gen = await loadCoat(src);
@@ -396,11 +479,8 @@ async function main() {
     .toBuffer({ resolveWithObject: true });
   out = await unsharpMild(down, SIZE, SIZE);
 
-  const dests = [
-    path.join(ROOT, 'docs/images/horse-base', `coat-master-${name}.png`),
-    path.join(ROOT, 'plugins/horse/layers/coat', `${name}.png`),
-  ];
-  for (const dest of dests) {
+  const written = [dests.master(name), dests.plugin(name)];
+  for (const dest of written) {
     await mkdir(path.dirname(dest), { recursive: true });
     await sharp(out, { raw: { width: SIZE, height: SIZE, channels: 4 } })
       .png({ compressionLevel: 9 })
@@ -408,15 +488,15 @@ async function main() {
     console.log('wrote', path.relative(ROOT, dest));
   }
 
-  const archive = path.join(
-    ROOT,
-    'docs/images/horse-source',
-    `coat-${name}-photoreal-src.png`,
-  );
+  const archive = dests.archive(name);
   if (path.resolve(src) !== path.resolve(archive)) {
     await mkdir(path.dirname(archive), { recursive: true });
     await copyFile(src, archive);
     console.log('archived', path.relative(ROOT, archive));
+  }
+
+  if (!syncEditor) {
+    return;
   }
 
   const { spawnSync } = await import('node:child_process');

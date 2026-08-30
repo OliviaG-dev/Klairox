@@ -18,7 +18,7 @@
       "options": [
         {
           "id": "standard",
-          "title": "Standard",
+          "title": "Standard-OC",
           "asset": "layers/body/standard.png"
         },
         {
@@ -93,6 +93,70 @@
       ]
     },
     {
+      "id": "coat-foal",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat-foal/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat-foal/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat-foal/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat-foal/chestnut.png"
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat-foal/grey.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "roan",
+          "title": "Roan",
+          "asset": "layers/coat-foal/roan.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "palomino",
+          "title": "Palomino",
+          "asset": "layers/coat-foal/palomino.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "isabelle",
+          "title": "Isabelle",
+          "asset": "layers/coat-foal/isabelle.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "cream",
+          "title": "Cream",
+          "asset": "layers/coat-foal/cream.png",
+          "tags": ["light"]
+        }
+      ]
+    },
+    {
       "id": "markings",
       "title": "Face markings",
       "order": 30,
@@ -155,6 +219,24 @@
       "hide": ["mane"]
     },
     {
+      "id": "standard-hides-foal-coat",
+      "description": "Adult coats are used for the standard build",
+      "when": { "body": "standard" },
+      "hide": ["coat-foal"]
+    },
+    {
+      "id": "foal-hides-standard-coat",
+      "description": "Foal coats are used for the foal build",
+      "when": { "body": "foal" },
+      "hide": ["coat"]
+    },
+    {
+      "id": "foal-hides-adult-overlays",
+      "description": "Face markings and equipment are authored for the adult silhouette",
+      "when": { "body": "foal" },
+      "hide": ["markings", "equipment"]
+    },
+    {
       "id": "armor-hides-markings",
       "description": "Plate armour covers the head, so face markings are not rendered",
       "when": { "equipment": "armor" },
@@ -182,6 +264,30 @@
       "id": "isabelle-coat-hides-star",
       "description": "A white star is hard to read against a pale isabelle face",
       "when": { "coat": "isabelle" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "foal-grey-coat-hides-star",
+      "description": "A white star does not read against a grey coat",
+      "when": { "coat-foal": "grey" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "foal-cream-coat-hides-star",
+      "description": "A white star does not read against a cream coat",
+      "when": { "coat-foal": "cream" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "foal-palomino-coat-hides-star",
+      "description": "A white star is hard to read against a pale palomino face",
+      "when": { "coat-foal": "palomino" },
+      "disable": ["markings:star"]
+    },
+    {
+      "id": "foal-isabelle-coat-hides-star",
+      "description": "A white star is hard to read against a pale isabelle face",
+      "when": { "coat-foal": "isabelle" },
       "disable": ["markings:star"]
     }
   ],

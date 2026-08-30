@@ -53,8 +53,8 @@ describe('loadPlugin', () => {
     const plugin = await loadPlugin(EXAMPLE_PLUGIN_DIR);
 
     expect(plugin.manifest.name).toBe('horse');
-    expect(plugin.manifest.layers).toHaveLength(6);
-    expect(plugin.manifest.constraints).toHaveLength(15);
+    expect(plugin.manifest.layers).toHaveLength(8);
+    expect(plugin.manifest.constraints).toHaveLength(17);
     expect(plugin.index.layers.get('coat')?.blendMode).toBe('normal');
     expect(plugin.index.layers.get('body')?.options.map((o) => o.id)).toEqual([
       'standard',

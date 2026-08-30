@@ -7,6 +7,7 @@
  * Prefer the realistic coat pipeline when available:
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> --build foal
+ *   node tools/generate-pie-overlays.mjs
  *
  * Usage: node tools/generate-example-assets.mjs
  *

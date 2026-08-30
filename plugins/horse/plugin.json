@@ -157,10 +157,80 @@
       ]
     },
     {
+      "id": "pie",
+      "title": "Pie",
+      "order": 25,
+      "dependsOn": ["coat"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "tobiano",
+          "title": "Tobiano",
+          "asset": "layers/pie/tobiano.png"
+        },
+        {
+          "id": "tovero",
+          "title": "Tovero",
+          "asset": "layers/pie/tovero.png"
+        },
+        {
+          "id": "overo",
+          "title": "Overo",
+          "asset": "layers/pie/overo.png"
+        },
+        {
+          "id": "splashed-white",
+          "title": "Splashed white",
+          "asset": "layers/pie/splashed-white.png"
+        },
+        {
+          "id": "sabino",
+          "title": "Sabino",
+          "asset": "layers/pie/sabino.png"
+        }
+      ]
+    },
+    {
+      "id": "pie-foal",
+      "title": "Pie",
+      "order": 25,
+      "dependsOn": ["coat-foal"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "tobiano",
+          "title": "Tobiano",
+          "asset": "layers/pie-foal/tobiano.png"
+        },
+        {
+          "id": "tovero",
+          "title": "Tovero",
+          "asset": "layers/pie-foal/tovero.png"
+        },
+        {
+          "id": "overo",
+          "title": "Overo",
+          "asset": "layers/pie-foal/overo.png"
+        },
+        {
+          "id": "splashed-white",
+          "title": "Splashed white",
+          "asset": "layers/pie-foal/splashed-white.png"
+        },
+        {
+          "id": "sabino",
+          "title": "Sabino",
+          "asset": "layers/pie-foal/sabino.png"
+        }
+      ]
+    },
+    {
       "id": "markings",
       "title": "Face markings",
       "order": 30,
-      "dependsOn": ["coat"],
+      "dependsOn": ["coat", "pie"],
       "options": [
         {
           "id": "blaze",
@@ -232,9 +302,23 @@
     },
     {
       "id": "foal-hides-adult-overlays",
-      "description": "Face markings and equipment are authored for the adult silhouette",
+      "description": "Adult pie, face markings and equipment are authored for the adult silhouette",
       "when": { "body": "foal" },
-      "hide": ["markings", "equipment"]
+      "hide": ["pie", "markings", "equipment"]
+    },
+    {
+      "id": "standard-hides-foal-pie",
+      "description": "Adult pie overlays are used for the standard build",
+      "when": { "body": "standard" },
+      "hide": ["pie-foal"]
+    },
+    {
+      "id": "pie-hides-markings",
+      "description": "Pinto patterns already carry face white, so separate markings are not painted",
+      "when": {
+        "pie": ["tobiano", "tovero", "overo", "splashed-white", "sabino"]
+      },
+      "hide": ["markings"]
     },
     {
       "id": "armor-hides-markings",

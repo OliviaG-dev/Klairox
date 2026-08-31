@@ -95,4 +95,42 @@ describe('buildCompositionPlan', () => {
       plan.layers.find((layer) => layer.layerId === 'coat-foal')?.assetPath,
     ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/coat-foal/chestnut.png'));
   });
+
+  it('paints pie over the coat and hides face markings', async () => {
+    const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
+    const plan = buildCompositionPlan(plugin, {
+      coat: 'chestnut',
+      pie: 'tobiano',
+      markings: 'blaze',
+    });
+    const painted = plan.layers.map((layer) => layer.layerId);
+
+    expect(painted).toContain('coat');
+    expect(painted).toContain('pie');
+    expect(painted.indexOf('pie')).toBeGreaterThan(painted.indexOf('coat'));
+    expect(painted).not.toContain('markings');
+    expect(plan.selection.markings).toBe('blaze');
+    expect(plan.hiddenLayers).toContain('markings');
+    expect(
+      plan.layers.find((layer) => layer.layerId === 'pie')?.assetPath,
+    ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/pie/tobiano.png'));
+  });
+
+  it('paints foal pie over the foal coat', async () => {
+    const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
+    const plan = buildCompositionPlan(plugin, {
+      body: 'foal',
+      'coat-foal': 'chestnut',
+      'pie-foal': 'sabino',
+    });
+    const painted = plan.layers.map((layer) => layer.layerId);
+
+    expect(painted).toContain('coat-foal');
+    expect(painted).toContain('pie-foal');
+    expect(painted).not.toContain('pie');
+    expect(painted).not.toContain('coat');
+    expect(plan.hiddenLayers).toEqual(
+      expect.arrayContaining(['body', 'coat', 'pie']),
+    );
+  });
 });

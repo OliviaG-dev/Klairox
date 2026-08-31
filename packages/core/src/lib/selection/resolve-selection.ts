@@ -1,4 +1,3 @@
-import { formatTargetRef } from '@klairox/plugin-sdk';
 import { KlairoxError } from '../errors.js';
 import type { LoadedPlugin } from '../plugin/plugin.types.js';
 import {
@@ -20,6 +19,10 @@ export interface SelectionResolution {
  * Turns a partial request into a complete selection: unknown entries are rejected,
  * required layers fall back to their first option still allowed by the constraints,
  * and optional layers stay unset.
+ *
+ * If a requested option on an optional layer is disabled by an upstream constraint
+ * (e.g. face markings on a pale coat), that request is dropped instead of failing —
+ * so the editor can switch coats without an error toast.
  *
  * Layers are walked in dependency order, so a constraint triggered by an upstream
  * layer already applies when the engine picks a default downstream.
@@ -54,18 +57,17 @@ export function resolveSelection(
         layer.id,
         requestedOptionId,
       );
-      if (blockedBy !== undefined) {
-        errors.push(
-          `"${formatTargetRef(layer.id, requestedOptionId)}" is disabled by ${blockedBy}`,
-        );
+      if (blockedBy === undefined) {
+        draft[layer.id] = requestedOptionId;
         continue;
       }
 
-      draft[layer.id] = requestedOptionId;
-      continue;
-    }
-
-    if (!layer.required) {
+      // Optional layers: drop the blocked request (e.g. face markings on a pale coat).
+      // Required layers: fall through and pick the first still-allowed option.
+      if (!layer.required) {
+        continue;
+      }
+    } else if (!layer.required) {
       continue;
     }
 

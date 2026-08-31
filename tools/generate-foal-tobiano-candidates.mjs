@@ -16,7 +16,16 @@ const SIZE = 512;
 const WORK = 1024;
 
 const VARIANTS = [
-  { id: '01-classic', seed: 11, warp: 0.018, sock: 0, neck: 0, rump: 0, chest: 0, barrel: 0 },
+  {
+    id: '01-classic',
+    seed: 11,
+    warp: 0.018,
+    sock: 0,
+    neck: 0,
+    rump: 0,
+    chest: 0,
+    barrel: 0,
+  },
 ];
 
 function luma(r, g, b) {
@@ -54,7 +63,8 @@ function smoothstep(edge0, edge1, x) {
 }
 
 function hash(ix, iy, seed) {
-  let n = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + seed * 1274126177;
+  let n =
+    Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + seed * 1274126177;
   n = Math.imul(n ^ (n >>> 13), 1274126177);
   return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
@@ -301,18 +311,30 @@ function foalTobiano(nx, ny, n, n2, variant) {
   v *= 1 - backGap * 0.99;
   v = Math.max(v, blob(nx, ny, 0.12, 0.91, 0.09, 0.09, 0.42));
   if (variant.neck > 0) {
-    v = Math.max(v, blob(p.x, p.y, 0.3, 0.2, 0.16, 0.14, 0.48) * variant.neck * 7);
+    v = Math.max(
+      v,
+      blob(p.x, p.y, 0.3, 0.2, 0.16, 0.14, 0.48) * variant.neck * 7,
+    );
   }
   if (variant.rump > 0) {
-    v = Math.max(v, blob(p.x, p.y, 0.78, 0.28, 0.16, 0.12, 0.48) * variant.rump * 7);
+    v = Math.max(
+      v,
+      blob(p.x, p.y, 0.78, 0.28, 0.16, 0.12, 0.48) * variant.rump * 7,
+    );
   }
   if (variant.barrel > 0) {
-    v = Math.max(v, blob(p.x, p.y, 0.52, 0.34, 0.22, 0.12, 0.46) * variant.barrel * 7);
+    v = Math.max(
+      v,
+      blob(p.x, p.y, 0.52, 0.34, 0.22, 0.12, 0.46) * variant.barrel * 7,
+    );
   }
   if (variant.barrel < 0) {
-    v *= 1 - blob(nx, ny, 0.5, 0.38, 0.12, 0.1, 0.4) * Math.abs(variant.barrel) * 5;
+    v *=
+      1 -
+      blob(nx, ny, 0.5, 0.38, 0.12, 0.1, 0.4) * Math.abs(variant.barrel) * 5;
   }
-  v *= 1 - blob(nx, ny, 0.22, 0.4, 0.15, 0.13, 0.4) * (0.88 + variant.chest * 3);
+  v *=
+    1 - blob(nx, ny, 0.22, 0.4, 0.15, 0.13, 0.4) * (0.88 + variant.chest * 3);
   v *= 1 - blob(nx, ny, 0.7, 0.42, 0.12, 0.1, 0.4) * 0.72;
   v = Math.max(v, blob(p.x, p.y, 0.23, 0.36, 0.11, 0.12, 0.4));
   v = Math.max(v, wobbleBlob(nx, ny, 0.8, 0.23, 0.22, 0.075, 0.36, 73, 0.38));
@@ -336,9 +358,13 @@ function foalTobiano(nx, ny, n, n2, variant) {
 }
 
 async function loadRaw(file, size) {
-  return sharp(file).ensureAlpha().resize(size, size, { kernel: 'mitchell' }).raw().toBuffer({
-    resolveWithObject: true,
-  });
+  return sharp(file)
+    .ensureAlpha()
+    .resize(size, size, { kernel: 'mitchell' })
+    .raw()
+    .toBuffer({
+      resolveWithObject: true,
+    });
 }
 
 function hoofMask(bay, width, height) {
@@ -381,7 +407,9 @@ function paintOverlay(soft, palomino, bay, morph, width, height) {
     const palN = clamp((palForm[p] - 0.12) / 0.78);
     const bayN = clamp((bayForm[p] - 0.06) / 0.55);
     let L = palN * 0.62 + bayN * 0.38;
-    L = clamp(L + (palLuma[p] - palForm[p]) * 1.15 + (bayLuma[p] - bayForm[p]) * 0.9);
+    L = clamp(
+      L + (palLuma[p] - palForm[p]) * 1.15 + (bayLuma[p] - bayForm[p]) * 0.9,
+    );
     const t =
       L < 0.5
         ? 0.5 * Math.pow(L * 2, 1.5)
@@ -427,15 +455,24 @@ async function compositeOnBay(overlay, bayPath, dest) {
     const i = p * 4;
     const a = overlayRaw.data[i + 3] / 255;
     out[i] = clampByte(bay.data[i] * (1 - a) + overlayRaw.data[i] * a);
-    out[i + 1] = clampByte(bay.data[i + 1] * (1 - a) + overlayRaw.data[i + 1] * a);
-    out[i + 2] = clampByte(bay.data[i + 2] * (1 - a) + overlayRaw.data[i + 2] * a);
+    out[i + 1] = clampByte(
+      bay.data[i + 1] * (1 - a) + overlayRaw.data[i + 1] * a,
+    );
+    out[i + 2] = clampByte(
+      bay.data[i + 2] * (1 - a) + overlayRaw.data[i + 2] * a,
+    );
     out[i + 3] = 255;
   }
-  await sharp(out, { raw: { width, height, channels: 4 } }).png().toFile(dest);
+  await sharp(out, { raw: { width, height, channels: 4 } })
+    .png()
+    .toFile(dest);
 }
 
 async function main() {
-  const bayMaster = path.join(ROOT, 'docs/images/horse-base/foal/coat-master-bay.png');
+  const bayMaster = path.join(
+    ROOT,
+    'docs/images/horse-base/foal/coat-master-bay.png',
+  );
   const foalMorph = await loadRaw(
     path.join(ROOT, 'docs/images/horse-base/foal/morphology-master.png'),
     WORK,
@@ -510,8 +547,18 @@ async function main() {
     for (let p = 0; p < field.length; p++) {
       binary[p] = field[p] > 0.38 ? 1 : 0;
     }
-    binary = erodeBinary(dilateBinary(binary, width, height, 5), width, height, 4);
-    binary = dilateBinary(erodeBinary(binary, width, height, 6), width, height, 6);
+    binary = erodeBinary(
+      dilateBinary(binary, width, height, 5),
+      width,
+      height,
+      4,
+    );
+    binary = dilateBinary(
+      erodeBinary(binary, width, height, 6),
+      width,
+      height,
+      6,
+    );
     const rounded = blurCoverage(binary, width, height, 16);
     for (let p = 0; p < binary.length; p++) {
       binary[p] = rounded[p] > 0.48 ? 1 : 0;
@@ -527,7 +574,13 @@ async function main() {
       width,
       height,
     );
-    const defringed = defringeSilhouette(painted, foalMorph.data, width, height, 1);
+    const defringed = defringeSilhouette(
+      painted,
+      foalMorph.data,
+      width,
+      height,
+      1,
+    );
     const { data: downRaw } = await sharp(defringed, {
       raw: { width, height, channels: 4 },
     })
@@ -550,10 +603,14 @@ async function main() {
   await sharp(classic).png().toFile(plugin);
   console.log('wrote', path.relative(ROOT, plugin));
 
-  const sync = spawnSync(process.execPath, [path.join(ROOT, 'tools/sync-editor-horse-plugin.mjs')], {
-    cwd: ROOT,
-    stdio: 'inherit',
-  });
+  const sync = spawnSync(
+    process.execPath,
+    [path.join(ROOT, 'tools/sync-editor-horse-plugin.mjs')],
+    {
+      cwd: ROOT,
+      stdio: 'inherit',
+    },
+  );
   if (sync.status !== 0) {
     throw new Error('editor plugin sync failed');
   }

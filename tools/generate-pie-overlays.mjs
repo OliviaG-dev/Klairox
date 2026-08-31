@@ -17,13 +17,7 @@ import sharp from 'sharp';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SIZE = 512;
 
-const PATTERNS = [
-  'tobiano',
-  'tovero',
-  'overo',
-  'splashed-white',
-  'sabino',
-];
+const PATTERNS = ['tobiano', 'tovero', 'overo', 'splashed-white', 'sabino'];
 
 const BUILDS = {
   standard: {
@@ -54,7 +48,8 @@ function luma(r, g, b) {
 }
 
 function hash(ix, iy, seed) {
-  let n = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + seed * 1274126177;
+  let n =
+    Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + seed * 1274126177;
   n = Math.imul(n ^ (n >>> 13), 1274126177);
   return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
@@ -224,7 +219,9 @@ function sabino(nx, ny, n, n2) {
   }
   v = Math.max(v, blob(p.x, p.y, 0.48, 0.56, 0.28, 0.12, 0.4) * 0.9);
   if (ny < 0.26 && nx < 0.38) {
-    const blaze = (1 - smoothstep(0.05, 0.11, Math.abs(nx - 0.24))) * smoothstep(0.26, 0.08, ny);
+    const blaze =
+      (1 - smoothstep(0.05, 0.11, Math.abs(nx - 0.24))) *
+      smoothstep(0.26, 0.08, ny);
     v = Math.max(v, blaze);
   }
   if (ny < 0.28 && nx < 0.3 && ny > 0.14) {
@@ -316,9 +313,7 @@ function paintOverlay(morph, pattern) {
   const soft = blurCoverage(field, width, height, blurRadius(pattern));
   const out = Buffer.alloc(width * height * 4);
   const muzzle =
-    pattern === 'overo' ||
-    pattern === 'tovero' ||
-    pattern === 'splashed-white';
+    pattern === 'overo' || pattern === 'tovero' || pattern === 'splashed-white';
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {

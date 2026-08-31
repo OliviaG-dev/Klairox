@@ -243,11 +243,7 @@ function recolorFlaxenToWhiteHair(r, g, b, bayL) {
   const k = target / Math.max(L, 1);
   const strand = clamp((bayL - 6) / 52);
   const occ = 0.86 + 0.14 * strand;
-  return [
-    greyR * k * occ,
-    greyG * k * occ * 0.99,
-    greyB * k * occ * 0.97,
-  ];
+  return [greyR * k * occ, greyG * k * occ * 0.99, greyB * k * occ * 0.97];
 }
 
 function inManeBox(x, y, scale) {
@@ -432,7 +428,12 @@ function parseArgs(argv) {
 }
 
 async function main() {
-  const { src, dest, base, aligned: alreadyAligned } = parseArgs(process.argv.slice(2));
+  const {
+    src,
+    dest,
+    base,
+    aligned: alreadyAligned,
+  } = parseArgs(process.argv.slice(2));
   if (!src || !dest) {
     console.error(
       'Usage: node tools/extract-pie-overlay.mjs <horse.png> <out.png> [--base bay.png] [--aligned]',
@@ -532,7 +533,12 @@ async function main() {
   for (let p = 0; p < field.length; p++) {
     binary[p] = field[p] > 0.38 ? 1 : 0;
   }
-  binary = erodeBinary(dilateBinary(binary, width, height, 4), width, height, 3);
+  binary = erodeBinary(
+    dilateBinary(binary, width, height, 4),
+    width,
+    height,
+    3,
+  );
 
   const rounded = blurCoverage(binary, width, height, 10);
   for (let p = 0; p < binary.length; p++) {

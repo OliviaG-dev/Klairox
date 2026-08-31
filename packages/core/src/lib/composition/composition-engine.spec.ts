@@ -111,9 +111,9 @@ describe('buildCompositionPlan', () => {
     expect(painted).not.toContain('markings');
     expect(plan.selection.markings).toBe('blaze');
     expect(plan.hiddenLayers).toContain('markings');
-    expect(plan.layers.find((layer) => layer.layerId === 'pie')?.assetPath).toBe(
-      path.resolve(HORSE_PLUGIN_DIR, 'layers/pie/tobiano.png'),
-    );
+    expect(
+      plan.layers.find((layer) => layer.layerId === 'pie')?.assetPath,
+    ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/pie/tobiano.png'));
   });
 
   it('paints foal pie over the foal coat', async () => {

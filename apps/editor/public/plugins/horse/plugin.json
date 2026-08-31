@@ -234,10 +234,54 @@
       "options": [
         {
           "id": "blaze",
-          "title": "Blaze",
+          "title": "Blaze (liste)",
           "asset": "layers/markings/blaze.png"
         },
-        { "id": "star", "title": "Star", "asset": "layers/markings/star.png" }
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/crescent.png"
+        }
       ]
     },
     {
@@ -325,54 +369,6 @@
       "description": "Plate armour covers the head, so face markings are not rendered",
       "when": { "equipment": "armor" },
       "hide": ["markings"]
-    },
-    {
-      "id": "grey-coat-hides-star",
-      "description": "A white star does not read against a grey coat",
-      "when": { "coat": "grey" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "cream-coat-hides-star",
-      "description": "A white star does not read against a cream coat",
-      "when": { "coat": "cream" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "palomino-coat-hides-star",
-      "description": "A white star is hard to read against a pale palomino face",
-      "when": { "coat": "palomino" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "isabelle-coat-hides-star",
-      "description": "A white star is hard to read against a pale isabelle face",
-      "when": { "coat": "isabelle" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "foal-grey-coat-hides-star",
-      "description": "A white star does not read against a grey coat",
-      "when": { "coat-foal": "grey" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "foal-cream-coat-hides-star",
-      "description": "A white star does not read against a cream coat",
-      "when": { "coat-foal": "cream" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "foal-palomino-coat-hides-star",
-      "description": "A white star is hard to read against a pale palomino face",
-      "when": { "coat-foal": "palomino" },
-      "disable": ["markings:star"]
-    },
-    {
-      "id": "foal-isabelle-coat-hides-star",
-      "description": "A white star is hard to read against a pale isabelle face",
-      "when": { "coat-foal": "isabelle" },
-      "disable": ["markings:star"]
     }
   ],
   "variants": {

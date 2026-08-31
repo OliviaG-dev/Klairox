@@ -54,7 +54,8 @@ describe('loadPlugin', () => {
 
     expect(plugin.manifest.name).toBe('horse');
     expect(plugin.manifest.layers).toHaveLength(8);
-    expect(plugin.manifest.constraints).toHaveLength(17);
+    expect(plugin.manifest.constraints).toHaveLength(9);
+    expect(plugin.index.layers.get('markings')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('coat')?.blendMode).toBe('normal');
     expect(plugin.index.layers.get('body')?.options.map((o) => o.id)).toEqual([
       'standard',

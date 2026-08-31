@@ -62,7 +62,7 @@ describe('resolveSelection', () => {
     ]);
   });
 
-  it('rejects an option that an upstream layer disabled', () => {
+  it('drops a disabled optional option instead of failing', () => {
     const plugin = createTestPlugin({
       constraints: [
         {
@@ -73,14 +73,50 @@ describe('resolveSelection', () => {
       ],
     });
 
-    const error = expectFailure(() =>
-      resolveSelection(plugin, { coat: 'grey', markings: 'star' }),
-    );
+    const { selection } = resolveSelection(plugin, {
+      coat: 'grey',
+      markings: 'star',
+    });
 
-    expect(error.code).toBe('SELECTION_INVALID');
-    expect(error.details).toEqual([
-      '"markings:star" is disabled by no-star-on-grey',
-    ]);
+    expect(selection).toEqual({ body: 'standard', coat: 'grey' });
+  });
+
+  it('drops every option when a pale coat disables the whole markings layer', () => {
+    const plugin = createTestPlugin({
+      constraints: [
+        {
+          id: 'pale-coat-hides-markings',
+          when: { coat: 'grey' },
+          disable: ['markings'],
+        },
+      ],
+    });
+
+    const { selection } = resolveSelection(plugin, {
+      coat: 'grey',
+      markings: 'star',
+    });
+
+    expect(selection).toEqual({ body: 'standard', coat: 'grey' });
+  });
+
+  it('falls back when a required option the caller asked for is disabled', () => {
+    const plugin = createTestPlugin({
+      constraints: [
+        {
+          id: 'heavy-hates-bay',
+          when: { body: 'heavy' },
+          disable: ['coat:bay'],
+        },
+      ],
+    });
+
+    const { selection } = resolveSelection(plugin, {
+      body: 'heavy',
+      coat: 'bay',
+    });
+
+    expect(selection).toEqual({ body: 'heavy', coat: 'grey' });
   });
 
   it('skips a disabled option when picking the default of a required layer', () => {

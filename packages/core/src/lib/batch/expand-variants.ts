@@ -60,6 +60,15 @@ export function expandVariants(
 
     try {
       const plan = buildCompositionPlan(plugin, requested);
+      const dropped = findDroppedRequests(requested, plan.selection);
+      if (dropped !== undefined) {
+        rejected.push({
+          requested,
+          reason: dropped,
+        });
+        continue;
+      }
+
       jobs.push({
         requested,
         selection: plan.selection,
@@ -79,6 +88,22 @@ export function expandVariants(
   }
 
   return { config, jobs, rejected };
+}
+
+/** Axis values that resolveSelection dropped or remapped (e.g. disabled options). */
+function findDroppedRequests(
+  requested: SelectionInput,
+  selection: Selection,
+): string | undefined {
+  for (const [layerId, optionId] of Object.entries(requested)) {
+    if (optionId === undefined) {
+      continue;
+    }
+    if (selection[layerId] !== optionId) {
+      return `"${layerId}:${optionId}" is disabled or remapped by constraints`;
+    }
+  }
+  return undefined;
 }
 
 function cartesianAxisCombos(

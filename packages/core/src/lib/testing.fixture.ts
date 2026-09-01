@@ -44,7 +44,9 @@ export function createTestPlugin(
         id: 'markings',
         order: 30,
         dependsOn: ['coat'],
-        options: [{ id: 'star', asset: 'layers/markings/star.png' }],
+        options: [
+          { id: 'star', asset: 'layers/markings/Standard-OC/star.png' },
+        ],
       },
       {
         id: 'equipment',

@@ -8,6 +8,7 @@
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name>
  *   node tools/stamp-coat-on-morph.mjs <generated.png> <out-name> --build foal
  *   node tools/generate-pie-overlays.mjs
+ *   node tools/extract-face-marking.mjs --build Standard-OC --debug
  *
  * Usage: node tools/generate-example-assets.mjs
  *
@@ -47,6 +48,11 @@ function silhouette(fill, bulk = 1) {
   </g>`;
 }
 
+/** Soft ellipse placeholder for face markings (real art from extract-face-marking.mjs). */
+function softMarking(cx, cy, rx, ry) {
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#f5f1e8" opacity="0.92" />`;
+}
+
 const ASSETS = {
   'layers/coat/bay.png': silhouette('#7b4a2d'),
   'layers/coat/bay-brun.png': silhouette('#5a3220'),
@@ -61,8 +67,16 @@ const ASSETS = {
   'layers/mane/short.png': `<path d="M320 250 L370 156 L392 164 L344 258 Z" fill="${MANE_COLOR}" />`,
   'layers/mane/long.png': `<path d="M314 258 L366 152 L396 162 L352 262 L338 296 L314 288 Z" fill="${MANE_COLOR}" />`,
 
-  'layers/markings/blaze.png': `<path d="M392 160 L438 148 L442 162 L396 174 Z" fill="#f5f1e8" />`,
-  'layers/markings/star.png': `<circle cx="400" cy="166" r="10" fill="#f7f4ec" />`,
+  'layers/markings/Standard-OC/blaze.png': softMarking(392, 168, 18, 48),
+  'layers/markings/Standard-OC/thin-blaze.png': softMarking(398, 170, 8, 46),
+  'layers/markings/Standard-OC/stripe.png': softMarking(396, 172, 6, 36),
+  'layers/markings/Standard-OC/star.png': softMarking(388, 158, 12, 12),
+  'layers/markings/Standard-OC/diamond.png': softMarking(390, 160, 11, 14),
+  'layers/markings/Standard-OC/heart.png': softMarking(390, 162, 12, 13),
+  'layers/markings/Standard-OC/snip.png': softMarking(412, 248, 10, 9),
+  'layers/markings/Standard-OC/star-snip.png': softMarking(400, 200, 14, 40),
+  'layers/markings/Standard-OC/bald.png': softMarking(396, 170, 28, 52),
+  'layers/markings/Standard-OC/crescent.png': softMarking(386, 162, 14, 12),
 
   'layers/equipment/saddle.png': `<g>
     <rect x="244" y="228" width="14" height="104" fill="#4a2f1b" />

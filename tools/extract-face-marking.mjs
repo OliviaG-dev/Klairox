@@ -836,7 +836,12 @@ async function main() {
     );
     const overlayPath = path.join(ROOT, out, `${id}.png`);
     await writeResized(overlay, width, height, overlayPath);
-    await writeResized(overlay, width, height, path.join(ROOT, docsOut, `${id}.png`));
+    await writeResized(
+      overlay,
+      width,
+      height,
+      path.join(ROOT, docsOut, `${id}.png`),
+    );
 
     if (debug) {
       const preview = Buffer.from(bay.data);

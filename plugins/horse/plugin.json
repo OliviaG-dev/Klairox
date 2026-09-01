@@ -235,52 +235,110 @@
         {
           "id": "blaze",
           "title": "Blaze (liste)",
-          "asset": "layers/markings/blaze.png"
+          "asset": "layers/markings/Standard-OC/blaze.png"
         },
         {
           "id": "thin-blaze",
           "title": "Thin blaze (fine liste)",
-          "asset": "layers/markings/thin-blaze.png"
+          "asset": "layers/markings/Standard-OC/thin-blaze.png"
         },
         {
           "id": "stripe",
           "title": "Stripe (race)",
-          "asset": "layers/markings/stripe.png"
+          "asset": "layers/markings/Standard-OC/stripe.png"
         },
         {
           "id": "star",
           "title": "Star (étoile)",
-          "asset": "layers/markings/star.png"
+          "asset": "layers/markings/Standard-OC/star.png"
         },
         {
           "id": "diamond",
           "title": "Diamond (lozange)",
-          "asset": "layers/markings/diamond.png"
+          "asset": "layers/markings/Standard-OC/diamond.png"
         },
         {
           "id": "heart",
           "title": "Heart (cœur)",
-          "asset": "layers/markings/heart.png"
+          "asset": "layers/markings/Standard-OC/heart.png"
         },
         {
           "id": "snip",
           "title": "Snip (pelote)",
-          "asset": "layers/markings/snip.png"
+          "asset": "layers/markings/Standard-OC/snip.png"
         },
         {
           "id": "star-snip",
           "title": "Star and snip",
-          "asset": "layers/markings/star-snip.png"
+          "asset": "layers/markings/Standard-OC/star-snip.png"
         },
         {
           "id": "bald",
           "title": "Bald face (grosse liste)",
-          "asset": "layers/markings/bald.png"
+          "asset": "layers/markings/Standard-OC/bald.png"
         },
         {
           "id": "crescent",
           "title": "Crescent (croissant)",
-          "asset": "layers/markings/crescent.png"
+          "asset": "layers/markings/Standard-OC/crescent.png"
+        }
+      ]
+    },
+    {
+      "id": "markings-foal",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat-foal", "pie-foal"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze (liste)",
+          "asset": "layers/markings/Foal/blaze.png"
+        },
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/Foal/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/Foal/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/Foal/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/Foal/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/Foal/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/Foal/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/Foal/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/Foal/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/Foal/crescent.png"
         }
       ]
     },
@@ -357,12 +415,26 @@
       "hide": ["pie-foal"]
     },
     {
+      "id": "standard-hides-foal-markings",
+      "description": "Adult face markings are used for the standard build",
+      "when": { "body": "standard" },
+      "hide": ["markings-foal"]
+    },
+    {
       "id": "pie-hides-markings",
       "description": "Pinto patterns already carry face white, so separate markings are not painted",
       "when": {
         "pie": ["tobiano", "tovero", "overo", "splashed-white", "sabino"]
       },
       "hide": ["markings"]
+    },
+    {
+      "id": "foal-pie-hides-foal-markings",
+      "description": "Foal pinto patterns already carry face white, so separate markings are not painted",
+      "when": {
+        "pie-foal": ["tobiano", "tovero", "overo", "splashed-white", "sabino"]
+      },
+      "hide": ["markings-foal"]
     },
     {
       "id": "armor-hides-markings",

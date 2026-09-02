@@ -13,6 +13,7 @@ export function toRenderRequest(
     format,
     resizeTo,
     layers: plan.layers.map((layer) => ({
+      layerId: layer.layerId,
       assetPath: layer.assetPath,
       opacity: layer.opacity,
       blendMode: layer.blendMode,

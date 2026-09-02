@@ -8,6 +8,7 @@ export * from './lib/errors.js';
 export * from './lib/events/engine-events.js';
 export * from './lib/events/event-bus.js';
 export * from './lib/composition/composition.types.js';
+export * from './lib/composition/mix-pie-over-dest.js';
 export * from './lib/plugin/plugin.types.js';
 export * from './lib/rules/rule-engine.js';
 export * from './lib/selection/resolution-order.js';

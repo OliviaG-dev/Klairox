@@ -40,6 +40,8 @@ export class EditorSession {
   readonly requested = signal<SelectionInput>({});
   readonly loadError = signal<string | null>(null);
   readonly loading = signal(false);
+  /** Bumped on each plugin load so the preview refetches layer PNGs. */
+  readonly assetNonce = signal(0);
 
   private readonly resolvedState = computed<ResolvedState>(() => {
     const plugin = this.plugin();
@@ -73,6 +75,7 @@ export class EditorSession {
     const plugin = this.plugin();
     const selection = this.selection();
     const evaluation = this.evaluation();
+    const nonce = this.assetNonce();
 
     if (!plugin || !evaluation) {
       return [];
@@ -98,7 +101,7 @@ export class EditorSession {
       layers.push({
         layerId: layer.id,
         optionId,
-        url: assetUrl(plugin.rootDir, option.asset),
+        url: assetUrl(plugin.rootDir, option.asset, nonce),
         order: layer.order,
         opacity: layer.opacity,
         blendMode: layer.blendMode,
@@ -131,6 +134,7 @@ export class EditorSession {
       }
 
       this.plugin.set(toLoadedPlugin(parsed.manifest, HORSE_PLUGIN_BASE));
+      this.assetNonce.set(Date.now());
       this.requested.set({});
     } catch (error) {
       this.plugin.set(null);
@@ -186,9 +190,10 @@ function toLoadedPlugin(
   };
 }
 
-function assetUrl(rootDir: string, asset: string): string {
+function assetUrl(rootDir: string, asset: string, nonce: number): string {
   const base = rootDir.endsWith('/') ? rootDir : `${rootDir}/`;
-  return `${base}${asset.replace(/^\//, '')}`;
+  const path = `${base}${asset.replace(/^\//, '')}`;
+  return nonce > 0 ? `${path}?v=${nonce}` : path;
 }
 
 function errorMessage(error: unknown): string {

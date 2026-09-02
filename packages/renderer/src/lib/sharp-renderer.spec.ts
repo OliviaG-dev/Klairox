@@ -182,6 +182,39 @@ describe('SharpRenderer', () => {
     });
   });
 
+  it('mixes a pie overlay into dest as opaque colour, not a glass rim', async () => {
+    const coat = await writeColor('black-coat-16.png', 16, {
+      r: 0,
+      g: 0,
+      b: 0,
+      alpha: 1,
+    });
+    const piePath = path.join(workDir, 'pie-white-16.png');
+    const pie = await sharp({
+      create: {
+        width: 16,
+        height: 16,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 0.5 },
+      },
+    })
+      .png()
+      .toBuffer();
+    await writeFile(piePath, pie);
+
+    const output = await renderer.render({
+      ...request(),
+      layers: [layer(coat), layer(piePath, { layerId: 'pie' })],
+    });
+
+    expect(await readPixel(output, 0, 0)).toEqual({
+      r: 128,
+      g: 128,
+      b: 128,
+      a: 255,
+    });
+  });
+
   it('names the layer that does not fit inside the canvas', async () => {
     const square = await writeSquare('red-32.png', 32);
 

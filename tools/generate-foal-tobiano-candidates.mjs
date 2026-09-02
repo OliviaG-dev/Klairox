@@ -15,6 +15,57 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SIZE = 512;
 const WORK = 1024;
 
+/**
+ * Lit end of the warm clay white shared by the face markings and the
+ * procedural pie overlays, so tobiano patches and a blaze read as the same
+ * hair. `FLOOR`/`RANGE` turn this photo's own light into a shading factor
+ * around it: without them the patches flatten to a dead fill, with a colder
+ * ramp of their own they read as a different white next to the markings.
+ */
+const WHITE = [252, 248, 241];
+/**
+ * Shading is normalised on the patches' *own* light rather than run through an
+ * absolute ramp: the darkest and brightest of it are mapped onto the ends of
+ * the white, so neither the shaded underside nor the lit back collapses onto a
+ * single value the way a fixed ceiling made them. The gamma keeps the bulk of
+ * the coat up at the white the face markings share, leaving the lower range for
+ * the shadows.
+ */
+const SHADE_MIN = 0.6;
+const SHADE_TOP = 1;
+const SHADE_GAMMA = 0.62;
+const SHADE_PCT_LO = 0.02;
+const SHADE_PCT_HI = 0.98;
+/** Fine coat grain, without which the blurred patch keeps a satin sheen. */
+const MATTE_GRAIN = 0.055;
+
+/**
+ * Coverage band the patch edge fades across, then the two noises that break it
+ * up: `JITTER` bends the boundary over a few pixels, `STRAND` pushes it back
+ * and forth by about a hair's width so single hairs cross into the other
+ * colour. Without the second one the two colours meet on a clean curve and the
+ * patch reads as a sticker laid on the coat.
+ */
+const EDGE_BASE = 0.34;
+const EDGE_WIDTH = 0.3;
+const EDGE_JITTER = 0.34;
+const EDGE_STRAND = 0.45;
+const EDGE_FRAY_MIN = 0.25;
+/** Jitter has to leave the top of the ramp below 1, or the interior pits. */
+const EDGE_LO_MAX = 1 - EDGE_WIDTH - 0.05;
+
+/**
+ * The foal wears a short brush mane, and the base coat draws it as blobby
+ * clumps rather than strands. Carrying that structure over to the white read as
+ * fleece, so the mane is flattened over MANE_SMOOTH_RADIUS and re-combed with
+ * noise stretched along MANE_ANGLE, the direction the crest hair stands in.
+ */
+const MANE_SMOOTH_RADIUS = 11;
+const MANE_ANGLE = Math.PI / 4;
+const MANE_ACROSS_FREQ = 2.1;
+const MANE_ALONG_FREQ = 0.17;
+const MANE_SWING = 0.21;
+
 const VARIANTS = [
   {
     id: '01-classic',
@@ -222,19 +273,6 @@ function defringeSilhouette(overlay, morph, width, height, edgePx = 2) {
   return out;
 }
 
-function featherAlpha(buf, width, height, radius) {
-  const alpha = new Float32Array(width * height);
-  for (let p = 0; p < width * height; p++) {
-    alpha[p] = buf[p * 4 + 3] / 255;
-  }
-  const soft = blurCoverage(alpha, width, height, radius);
-  const out = Buffer.from(buf);
-  for (let p = 0; p < width * height; p++) {
-    out[p * 4 + 3] = clampByte(soft[p] * 255);
-  }
-  return out;
-}
-
 function ellipse(nx, ny, cx, cy, rx, ry) {
   const dx = (nx - cx) / rx;
   const dy = (ny - cy) / ry;
@@ -288,6 +326,28 @@ function growFoalMane(field, bay, morph, width, height) {
       if (L < 72 && C < 38) field[p] = 1;
     }
   }
+}
+
+/** 0–1 over the foal crest: dark low-chroma hair, soft edged so it can blend. */
+function foalManeField(bay, morph, width, height) {
+  const scale = width / SIZE;
+  const out = new Float32Array(width * height);
+  const x0 = Math.round(148 * scale);
+  const x1 = Math.round(255 * scale);
+  const y0 = Math.round(40 * scale);
+  const y1 = Math.round(165 * scale);
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const p = y * width + x;
+      const i = p * 4;
+      if (morph[i + 3] < 16 || bay[i + 3] < 16) continue;
+      if (y < 88 * scale && x < 165 * scale) continue;
+      const L = luma(bay[i], bay[i + 1], bay[i + 2]);
+      const C = chroma(bay[i], bay[i + 1], bay[i + 2]);
+      out[p] = smoothstep(86, 44, L) * smoothstep(50, 20, C);
+    }
+  }
+  return blurCoverage(out, width, height, 2);
 }
 
 /** Tobiano on the foal bbox: dark head, white over the back, white legs, dark tail. */
@@ -388,7 +448,59 @@ function hoofMask(bay, width, height) {
   return mask;
 }
 
-function paintOverlay(soft, palomino, bay, morph, width, height) {
+/**
+ * A tobiano boundary is a couple of hairs wide, not an airbrush: the wide blur
+ * that rounds the blobs also has to be pulled back into a narrow band, with the
+ * threshold jittered by noise so the rim breaks into hair and not a clean curve.
+ */
+function hairEdge(field, mane, width, height, seed = 61) {
+  const scale = width / SIZE;
+  const out = new Float32Array(field.length);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const cov = field[p];
+      if (cov <= 0.002) continue;
+      const nx = x / scale;
+      const ny = y / scale;
+      const wobble = fbm(nx * 0.55 + ny * 0.14, ny * 0.9, seed, 4) - 0.5;
+      // Stretched along the body so the fringe reads as lying hair, over two
+      // octaves so the strands vary in length instead of combing evenly.
+      const strand = fbm(nx * 0.14 + ny * 0.05, ny * 0.42, seed + 23, 2) - 0.5;
+      // A real boundary is not evenly serrated: it runs almost clean for a
+      // stretch, then frays. Modulating the strand amplitude over ~20px keeps
+      // the fringe from reading as a comb.
+      const fray = EDGE_FRAY_MIN + fbm(nx * 0.045, ny * 0.05, seed + 41, 3);
+      // Mane hair hangs in long locks, so the crest keeps a clean line: the
+      // coat fringe is faded out wherever the mane mask takes over.
+      const calm = 1 - mane[p];
+      const lo = clamp(
+        EDGE_BASE + (wobble * EDGE_JITTER + strand * EDGE_STRAND * fray) * calm,
+        0.06,
+        EDGE_LO_MAX,
+      );
+      out[p] = clamp(smoothstep(lo, lo + EDGE_WIDTH, cov));
+    }
+  }
+  return out;
+}
+
+/** The render's own light at p, 0..1, before it is turned into a white. */
+function formLight(p, palLuma, bayLuma, palForm, bayForm) {
+  const palN = clamp((palForm[p] - 0.12) / 0.78);
+  const bayN = clamp((bayForm[p] - 0.06) / 0.55);
+  const L = clamp(
+    palN * 0.62 +
+      bayN * 0.38 +
+      (palLuma[p] - palForm[p]) * 1.15 +
+      (bayLuma[p] - bayForm[p]) * 0.9,
+  );
+  return L < 0.5
+    ? 0.5 * Math.pow(L * 2, 1.5)
+    : 1 - 0.5 * Math.pow((1 - L) * 2, 1.15);
+}
+
+function paintOverlay(soft, mane, palomino, bay, morph, width, height) {
   const palLuma = new Float32Array(width * height);
   const bayLuma = new Float32Array(width * height);
   for (let p = 0; p < width * height; p++) {
@@ -400,25 +512,63 @@ function paintOverlay(soft, palomino, bay, morph, width, height) {
   const bayForm = blurCoverage(bayLuma, width, height, 7);
   const hoof = hoofMask(bay, width, height);
   const out = Buffer.alloc(width * height * 4);
+  const scale = width / SIZE;
+
+  const samples = [];
+  for (let p = 0; p < width * height; p++) {
+    const i = p * 4;
+    if (soft[p] < 0.5 || morph[i + 3] < 16 || bay[i + 3] < 16) continue;
+    samples.push(formLight(p, palLuma, bayLuma, palForm, bayForm));
+  }
+  samples.sort((a, b) => a - b);
+  const pick = (q) => samples[Math.floor(q * (samples.length - 1))] ?? 0.5;
+  const loLight = samples.length ? pick(SHADE_PCT_LO) : 0.2;
+  const hiLight = samples.length ? pick(SHADE_PCT_HI) : 0.9;
+  const lightSpan = Math.max(1e-3, hiLight - loLight);
+
+  const shadeField = new Float32Array(width * height);
+  for (let p = 0; p < width * height; p++) {
+    const i = p * 4;
+    if (soft[p] < 0.06 || morph[i + 3] < 16 || bay[i + 3] < 16) continue;
+    const x = (p % width) / scale;
+    const y = ((p / width) | 0) / scale;
+    const t = formLight(p, palLuma, bayLuma, palForm, bayForm);
+    const grain = (fbm(x * 1.1 + y * 0.3, y * 1.7, 29, 3) - 0.5) * MATTE_GRAIN;
+    const lit = clamp((t - loLight) / lightSpan);
+    shadeField[p] = clamp(
+      SHADE_MIN + (SHADE_TOP - SHADE_MIN) * Math.pow(lit, SHADE_GAMMA) + grain,
+      0,
+      SHADE_TOP,
+    );
+  }
+  const maneFlat = blurCoverage(shadeField, width, height, MANE_SMOOTH_RADIUS);
+  const cosA = Math.cos(MANE_ANGLE);
+  const sinA = Math.sin(MANE_ANGLE);
+
   for (let p = 0; p < width * height; p++) {
     const i = p * 4;
     const cov = soft[p];
     if (cov < 0.06 || morph[i + 3] < 16 || bay[i + 3] < 16) continue;
-    const palN = clamp((palForm[p] - 0.12) / 0.78);
-    const bayN = clamp((bayForm[p] - 0.06) / 0.55);
-    let L = palN * 0.62 + bayN * 0.38;
-    L = clamp(
-      L + (palLuma[p] - palForm[p]) * 1.15 + (bayLuma[p] - bayForm[p]) * 0.9,
-    );
-    const t =
-      L < 0.5
-        ? 0.5 * Math.pow(L * 2, 1.5)
-        : 1 - 0.5 * Math.pow((1 - L) * 2, 1.15);
-    let r = 122 + t * 133;
-    let g = 120 + t * 134;
-    let b = 114 + t * 138;
+    const x = (p % width) / scale;
+    const y = ((p / width) | 0) / scale;
+    let shade = shadeField[p];
+    const m = mane[p];
+    if (m > 0.01) {
+      // A slow warp on the across axis, or the locks line up as a hairbrush.
+      const warp = (fbm(x * 0.09, y * 0.11, 83, 2) - 0.5) * 3.5;
+      const across = x * cosA + y * sinA + warp;
+      const along = y * cosA - x * sinA;
+      const strand =
+        fbm(across * MANE_ACROSS_FREQ, along * MANE_ALONG_FREQ, 71, 3) - 0.5;
+      const combed = maneFlat[p] * (1 + strand * 2 * MANE_SWING);
+      shade = clamp(shade * (1 - m) + combed * m, 0, SHADE_TOP);
+    }
+    let r = WHITE[0] * shade;
+    let g = WHITE[1] * shade;
+    let b = WHITE[2] * shade;
     const h = hoof[p];
     if (h > 0.02) {
+      const t = formLight(p, palLuma, bayLuma, palForm, bayForm);
       const grain = (palLuma[p] - palForm[p]) * 36;
       const hornR = 206 + t * 42 + grain;
       const hornG = 158 + t * 52 + grain * 0.85;
@@ -426,12 +576,6 @@ function paintOverlay(soft, palomino, bay, morph, width, height) {
       r = r * (1 - h) + hornR * h;
       g = g * (1 - h) + hornG * h;
       b = b * (1 - h) + hornB * h;
-    } else {
-      const warm = r - (g + b) * 0.5;
-      if (warm > 4) {
-        g += warm * 0.45;
-        b += warm * 0.7;
-      }
     }
     out[i] = clampByte(r);
     out[i + 1] = clampByte(g);
@@ -564,10 +708,25 @@ async function main() {
       binary[p] = rounded[p] > 0.48 ? 1 : 0;
     }
     eraseElbowStick(binary, width, height);
-    const soft = blurCoverage(binary, width, height, 8);
+    const maneMask = foalManeField(foalBay.data, foalMorph.data, width, height);
+    // The raw mask only hugs the dark clumps of the brush mane, so it is spread
+    // and saturated into one solid crest band. A blobby mask would smooth the
+    // clumps but leave the gaps between them, keeping the fleece look, and the
+    // crest itself sits a few pixels outside the base coat's mane silhouette.
+    const maneCalm = blurCoverage(maneMask, width, height, 7);
+    for (let p = 0; p < maneCalm.length; p++) {
+      maneCalm[p] = clamp(maneCalm[p] * 3);
+    }
+    const soft = hairEdge(
+      blurCoverage(binary, width, height, 5),
+      maneCalm,
+      width,
+      height,
+    );
 
     const painted = paintOverlay(
       soft,
+      maneCalm,
       foalPal.data,
       foalBay.data,
       foalMorph.data,
@@ -587,11 +746,12 @@ async function main() {
       .resize(SIZE, SIZE, { kernel: 'mitchell' })
       .raw()
       .toBuffer({ resolveWithObject: true });
-    const smooth = featherAlpha(downRaw, SIZE, SIZE, 1);
 
+    // No extra alpha feather here: the 2:1 downscale already antialiases, and
+    // a blur on top would wipe out the hair fringe hairEdge just carved.
     const overlayPath = path.join(outDir, `tobiano-${variant.id}.png`);
     const previewPath = path.join(outDir, `tobiano-${variant.id}-on-bay.png`);
-    await sharp(smooth, { raw: { width: SIZE, height: SIZE, channels: 4 } })
+    await sharp(downRaw, { raw: { width: SIZE, height: SIZE, channels: 4 } })
       .png({ compressionLevel: 9 })
       .toFile(overlayPath);
     await compositeOnBay(overlayPath, bayMaster, previewPath);

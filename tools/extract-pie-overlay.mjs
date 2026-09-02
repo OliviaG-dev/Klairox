@@ -15,8 +15,95 @@ import sharp from 'sharp';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SIZE = 512;
 
+/**
+ * Lit end of the warm clay white shared by the face markings and the
+ * procedural pie overlays, so a patch and a blaze read as the same hair.
+ */
+const WHITE = [252, 248, 241];
+
+/**
+ * Shading is normalised on the patches' *own* light rather than run through an
+ * absolute ramp: the darkest and brightest of it are mapped onto the ends of
+ * the white, so neither the shaded underside nor the lit back collapses onto a
+ * single value. The gamma keeps the bulk of the coat up at the white the face
+ * markings share, leaving the lower range for the shadows.
+ */
+const SHADE_MIN = 0.64;
+const SHADE_TOP = 1;
+const SHADE_GAMMA = 0.95;
+/** Local unsharp on form light, so muscle cups read instead of a global wash. */
+const FORM_CONTRAST = 1.55;
+const FORM_CONTRAST_RADIUS = 14;
+const SHADE_PCT_LO = 0.02;
+const SHADE_PCT_HI = 0.98;
+
+/** Weights of the fine detail on top of the morph clay form. */
+const DETAIL_PAL = 0.55;
+const DETAIL_BAY = 0.58;
+const DETAIL_FORM = 1.0;
+
+/** Fine coat grain plus a slower mottle, so the patch reads as matte hair. */
+const MATTE_GRAIN = 0.06;
+const MATTE_MOTTLE = 0.04;
+
+/**
+ * Mane locks come from the aligned source horse, remapped onto the patch
+ * white. A 1px blur only antialiases; more than that turns the hair into felt.
+ */
+const MANE_PAINT_BLUR = 1;
+
+/**
+ * Coverage band the patch edge fades across, then the two noises that break it
+ * up: `JITTER` bends the boundary over a few pixels, `STRAND` pushes it back
+ * and forth by about a hair's width so single hairs cross into the other
+ * colour, and `FRAY` modulates that so the boundary runs almost clean for a
+ * stretch and then frays instead of serrating evenly.
+ */
+const EDGE_BASE = 0.38;
+const EDGE_WIDTH = 0.42;
+const EDGE_JITTER = 0.12;
+const EDGE_STRAND = 0.16;
+const EDGE_FRAY_MIN = 0.25;
+/** Jitter has to leave the top of the ramp below 1, or the interior pits. */
+const EDGE_LO_MAX = 1 - EDGE_WIDTH - 0.05;
+
 function luma(r, g, b) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function hash(ix, iy, seed) {
+  let n =
+    Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + seed * 1274126177;
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
+
+function valueNoise(x, y, seed) {
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const fx = x - x0;
+  const fy = y - y0;
+  const sx = fx * fx * (3 - 2 * fx);
+  const sy = fy * fy * (3 - 2 * fy);
+  const a = hash(x0, y0, seed);
+  const b = hash(x0 + 1, y0, seed);
+  const c = hash(x0, y0 + 1, seed);
+  const d = hash(x0 + 1, y0 + 1, seed);
+  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+}
+
+function fbm(x, y, seed, octaves = 4) {
+  let sum = 0;
+  let amp = 0.5;
+  let freq = 1;
+  let norm = 0;
+  for (let i = 0; i < octaves; i++) {
+    sum += amp * valueNoise(x * freq, y * freq, seed + i * 19);
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2;
+  }
+  return sum / norm;
 }
 
 function chroma(r, g, b) {
@@ -139,17 +226,72 @@ function smoothstep(edge0, edge1, x) {
   return t * t * (3 - 2 * t);
 }
 
-function featherAlpha(buf, width, height, radius) {
-  const alpha = new Float32Array(width * height);
-  for (let p = 0; p < width * height; p++) {
-    alpha[p] = buf[p * 4 + 3] / 255;
-  }
-  const soft = blurCoverage(alpha, width, height, radius);
-  const out = Buffer.from(buf);
-  for (let p = 0; p < width * height; p++) {
-    out[p * 4 + 3] = clampByte(soft[p] * 255);
+/**
+ * A tobiano boundary is a couple of hairs wide, not an airbrush: the blur that
+ * rounds the blobs has to be pulled back into a narrow band, with the threshold
+ * jittered so the rim breaks into hair and not a clean vector curve.
+ */
+function hairEdge(field, mane, width, height, seed = 61) {
+  const scale = width / SIZE;
+  const out = new Float32Array(field.length);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const cov = field[p];
+      if (cov <= 0.002) continue;
+      const nx = x / scale;
+      const ny = y / scale;
+      const wobble = fbm(nx * 0.55 + ny * 0.14, ny * 0.9, seed, 4) - 0.5;
+      // Stretched along the body so the fringe reads as lying hair, over two
+      // octaves so the strands vary in length instead of combing evenly.
+      const strand = fbm(nx * 0.14 + ny * 0.05, ny * 0.42, seed + 23, 2) - 0.5;
+      const fray = EDGE_FRAY_MIN + fbm(nx * 0.045, ny * 0.05, seed + 41, 3);
+      // Mane hair hangs in long locks, so the crest keeps a clean line: the
+      // coat fringe is faded out wherever the mane mask takes over.
+      const calm = 1 - mane[p];
+      const lo = clamp(
+        EDGE_BASE + (wobble * EDGE_JITTER + strand * EDGE_STRAND * fray) * calm,
+        0.06,
+        EDGE_LO_MAX,
+      );
+      // Crest hair is a soft lock, not a pixel stair: widen the coverage ramp
+      // wherever the mane takes over so the silhouette antialiases.
+      const band = EDGE_WIDTH + mane[p] * 0.38;
+      out[p] = clamp(smoothstep(lo, lo + band, cov));
+    }
   }
   return out;
+}
+
+/** Same warm clay-lit white as the face-marking extract, so pie matches a blaze. */
+function whiteFromMorph(morph, i) {
+  const l = luma(morph[i], morph[i + 1], morph[i + 2]) / 255;
+  const lift = 0.9;
+  let r = morph[i] + (248 - morph[i]) * lift;
+  let g = morph[i + 1] + (244 - morph[i + 1]) * lift;
+  let b = morph[i + 2] + (236 - morph[i + 2]) * lift;
+  r = r * 0.82 + (228 + l * 27) * 0.18;
+  g = g * 0.82 + (224 + l * 28) * 0.18;
+  b = b * 0.82 + (216 + l * 32) * 0.18;
+  return [r, g, b];
+}
+
+/** Morph clay as the form, coat luma as the hair grain on top of it. */
+function formLight(
+  p,
+  morphLuma,
+  morphBlur,
+  palLuma,
+  bayLuma,
+  palBlur,
+  bayBlur,
+) {
+  const broad = morphBlur[p];
+  const detail =
+    (morphLuma[p] - morphBlur[p]) * DETAIL_FORM +
+    (palLuma[p] - palBlur[p]) * DETAIL_PAL +
+    (bayLuma[p] - bayBlur[p]) * DETAIL_BAY;
+  return clamp(broad + detail);
 }
 
 function blurCoverage(field, width, height, radius) {
@@ -225,81 +367,61 @@ function erodeBinary(field, width, height, radius) {
   return out;
 }
 
-function contrastLuma(r, g, b, amount) {
-  const L = luma(r, g, b);
-  if (L < 1) return [r, g, b];
-  const L2 = clamp(128 + (L - 128) * amount, 0, 255);
-  const k = L2 / L;
-  return [r * k, g * k, b * k];
-}
-
-function recolorFlaxenToWhiteHair(r, g, b, bayL) {
-  const L = luma(r, g, b);
-  const greyR = r * 0.28 + L * 0.72;
-  const greyG = g * 0.28 + L * 0.72;
-  const greyB = b * 0.28 + L * 0.72;
-  const t = Math.pow(smoothstep(95, 228, L), 0.82);
-  const target = 128 + t * 124;
-  const k = target / Math.max(L, 1);
-  const strand = clamp((bayL - 6) / 52);
-  const occ = 0.86 + 0.14 * strand;
-  return [greyR * k * occ, greyG * k * occ * 0.99, greyB * k * occ * 0.97];
-}
+/** Search window for crest locks — not a paint mask. Morph alpha is the real clip. */
+const MANE_X0 = 145;
+const MANE_X1 = 310;
+const MANE_Y0 = 24;
+const MANE_Y1 = 240;
 
 function inManeBox(x, y, scale) {
-  if (x < 145 * scale || x > 310 * scale) return false;
-  if (y < 52 * scale || y > 240 * scale) return false;
+  if (x < MANE_X0 * scale || x > MANE_X1 * scale) return false;
+  if (y < MANE_Y0 * scale || y > MANE_Y1 * scale) return false;
   return true;
 }
 
-function isForelock(x, y, scale) {
-  return y < 88 * scale && x < 185 * scale;
+/** Soft disc between the ears so the forelock stays dark without a 90° cut. */
+function forelockWeight(x, y, scale) {
+  const nx = x / scale - 160;
+  const ny = y / scale - 50;
+  return smoothstep(42, 18, Math.hypot(nx * 1.25, ny));
 }
 
-function isManeHair(bay, x, y, width, height) {
-  return maneWeight(bay, x, y, width, height) > 0.45;
+function isManeHair(bay, x, y, width) {
+  return maneWeight(bay, x, y, width) > 0.45;
 }
 
 /** 0–1: dark low-chroma bay hair in the mane box. Soft edge, not a hard cut. */
-function maneWeight(bay, x, y, width, height) {
+function maneWeight(bay, x, y, width) {
   const scale = width / SIZE;
-  if (!inManeBox(x, y, scale) || isForelock(x, y, scale)) return 0;
+  if (!inManeBox(x, y, scale)) return 0;
+  const lock = 1 - forelockWeight(x, y, scale);
+  if (lock < 0.04) return 0;
   const i = (y * width + x) * 4;
   if (bay[i + 3] < 16) return 0;
   const L = luma(bay[i], bay[i + 1], bay[i + 2]);
   const C = chroma(bay[i], bay[i + 1], bay[i + 2]);
-  return smoothstep(88, 40, L) * smoothstep(52, 18, C);
+  return lock * smoothstep(88, 40, L) * smoothstep(52, 18, C);
 }
 
-function maneTipFade(maneMask, width, height, maxR) {
-  const fade = new Float32Array(width * height);
-  fade.fill(1);
+/** maneWeight over the whole canvas, softened so it can be used as a blend. */
+function maneField(bay, morph, width, height) {
+  const out = new Float32Array(width * height);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const p = y * width + x;
-      if (!maneMask[p]) continue;
-      let dist = maxR + 1;
-      ring: for (let r = 1; r <= maxR; r++) {
-        for (let dy = -r; dy <= r; dy++) {
-          for (let dx = -r; dx <= r; dx++) {
-            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
-              dist = r;
-              break ring;
-            }
-            if (!maneMask[ny * width + nx]) {
-              dist = r;
-              break ring;
-            }
-          }
-        }
-      }
-      fade[p] = dist > maxR ? 1 : smoothstep(0.3, maxR + 0.2, dist);
+      if (morph[p * 4 + 3] < 16) continue;
+      out[p] = maneWeight(bay, x, y, width);
     }
   }
-  return blurCoverage(fade, width, height, 2);
+  return blurCoverage(out, width, height, 2);
+}
+
+function clipToMorph(buf, morph, size) {
+  for (let p = 0; p < size * size; p++) {
+    const i = p * 4;
+    if (morph[i + 3] < 8) buf[i + 3] = 0;
+    else buf[i + 3] = Math.min(buf[i + 3], morph[i + 3]);
+  }
 }
 
 function blurRgbMasked(buf, mask, width, height, radius) {
@@ -364,18 +486,22 @@ function blurRgbMasked(buf, mask, width, height, radius) {
   return out;
 }
 
-/** Grow white into the black mane where the pie already crosses the crest. */
-function growWhiteMane(field, bay, morph, width, height) {
+/** Grow white into the mane where the pie already crosses the crest. */
+function growWhiteMane(field, horse, bay, morph, width) {
   const scale = width / SIZE;
-  const x0 = Math.round(145 * scale);
-  const x1 = Math.round(310 * scale);
-  const y0 = Math.round(52 * scale);
-  const y1 = Math.round(240 * scale);
+  const x0 = Math.round(MANE_X0 * scale);
+  const x1 = Math.round(MANE_X1 * scale);
+  const y0 = Math.round(MANE_Y0 * scale);
+  const y1 = Math.round(MANE_Y1 * scale);
 
   const colHasWhite = new Uint8Array(width);
+  const colStart = new Int32Array(width).fill(-1);
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
-      if (field[y * width + x] > 0.45) colHasWhite[x] = 1;
+      if (field[y * width + x] > 0.45) {
+        colHasWhite[x] = 1;
+        if (colStart[x] < 0) colStart[x] = y;
+      }
     }
   }
 
@@ -387,12 +513,25 @@ function growWhiteMane(field, bay, morph, width, height) {
     ) {
       continue;
     }
-    for (let y = y0; y <= y1; y++) {
+    let startY = y1;
+    for (let nx = x - 2; nx <= x + 2; nx++) {
+      if (nx < x0 || nx > x1 || colStart[nx] < 0) continue;
+      if (colStart[nx] < startY) startY = colStart[nx];
+    }
+    for (let y = startY; y <= y1; y++) {
       const p = y * width + x;
       const i = p * 4;
       if (morph[i + 3] < 16) continue;
-      if (!isManeHair(bay, x, y, width, height)) continue;
-      field[p] = 1;
+      const lock = 1 - forelockWeight(x, y, scale);
+      if (lock < 0.08) continue;
+      const hL = luma(horse[i], horse[i + 1], horse[i + 2]);
+      const hC = chroma(horse[i], horse[i + 1], horse[i + 2]);
+      if (hL > 148 && hC < 46) {
+        field[p] = Math.max(field[p], lock * smoothstep(148, 188, hL));
+        continue;
+      }
+      if (!isManeHair(bay, x, y, width)) continue;
+      field[p] = Math.max(field[p], lock);
     }
   }
 }
@@ -526,7 +665,7 @@ async function main() {
     field[p] = clamp(score);
   }
 
-  growWhiteMane(field, bay.data, morphHi.data, width, height);
+  growWhiteMane(field, horse.data, bay.data, morphHi.data, width, height);
   field = blurCoverage(field, width, height, 2);
 
   let binary = new Float32Array(width * height);
@@ -541,55 +680,181 @@ async function main() {
   );
 
   const rounded = blurCoverage(binary, width, height, 10);
-  for (let p = 0; p < binary.length; p++) {
-    binary[p] = rounded[p] > 0.5 ? 1 : 0;
+  const maneMask = maneField(bay.data, morphHi.data, width, height);
+  // The crest sits a few pixels outside the base coat's mane silhouette, so the
+  // calming mask is spread past it: otherwise the topmost row of the crest
+  // still gets the coat fringe and the lock reads as fur.
+  const maneCalm = blurCoverage(maneMask, width, height, 5);
+  for (let p = 0; p < maneCalm.length; p++) {
+    maneCalm[p] = clamp(maneCalm[p] * 2.4);
   }
-  const soft = blurCoverage(binary, width, height, 5);
+  const edged = hairEdge(rounded, maneCalm, width, height);
+  const soft = new Float32Array(edged.length);
+  for (let p = 0; p < soft.length; p++) {
+    const m = maneCalm[p];
+    soft[p] = edged[p] * (0.4 + 0.6 * m) + rounded[p] * 0.6 * (1 - m);
+  }
+  // The blob-round pass above wipes lock silhouettes. Stamp the source horse's
+  // own white mane back on, so the crest reads as hanging hair again.
+  {
+    const scale = width / SIZE;
+    const x0 = Math.round(MANE_X0 * scale);
+    const x1 = Math.round(MANE_X1 * scale);
+    const y0 = Math.round(MANE_Y0 * scale);
+    const y1 = Math.round(MANE_Y1 * scale);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const p = y * width + x;
+        const i = p * 4;
+        if (morphHi.data[i + 3] < 16) continue;
+        const lock = 1 - forelockWeight(x, y, scale);
+        if (lock < 0.08) continue;
+        const hL = luma(horse.data[i], horse.data[i + 1], horse.data[i + 2]);
+        const hC = chroma(horse.data[i], horse.data[i + 1], horse.data[i + 2]);
+        if (hL <= 148 || hC >= 46) continue;
+        soft[p] = Math.max(soft[p], lock * smoothstep(148, 188, hL));
+      }
+    }
+  }
 
   const palLuma = new Float32Array(width * height);
   const bayLuma = new Float32Array(width * height);
+  const morphLuma = new Float32Array(width * height);
+  const horseLuma = new Float32Array(width * height);
   for (let p = 0; p < width * height; p++) {
     const i = p * 4;
     palLuma[p] =
       luma(palomino.data[i], palomino.data[i + 1], palomino.data[i + 2]) / 255;
     bayLuma[p] = luma(bay.data[i], bay.data[i + 1], bay.data[i + 2]) / 255;
+    morphLuma[p] =
+      luma(morphHi.data[i], morphHi.data[i + 1], morphHi.data[i + 2]) / 255;
+    horseLuma[p] =
+      luma(horse.data[i], horse.data[i + 1], horse.data[i + 2]) / 255;
   }
-  const palForm = blurCoverage(palLuma, width, height, 8);
+  const morphBlur = blurCoverage(morphLuma, width, height, 6);
   const palBlur = blurCoverage(palLuma, width, height, 2);
   const bayBlur = blurCoverage(bayLuma, width, height, 2);
 
+  const rawLight = new Float32Array(width * height);
+  for (let p = 0; p < width * height; p++) {
+    if (soft[p] < 0.06 || morphHi.data[p * 4 + 3] < 16) continue;
+    rawLight[p] = formLight(
+      p,
+      morphLuma,
+      morphBlur,
+      palLuma,
+      bayLuma,
+      palBlur,
+      bayBlur,
+    );
+  }
+  const broadLight = blurCoverage(
+    rawLight,
+    width,
+    height,
+    FORM_CONTRAST_RADIUS,
+  );
+  const punchLight = new Float32Array(width * height);
+  for (let p = 0; p < width * height; p++) {
+    if (soft[p] < 0.06) continue;
+    punchLight[p] = clamp(
+      broadLight[p] + (rawLight[p] - broadLight[p]) * FORM_CONTRAST,
+    );
+  }
+
+  const samples = [];
+  for (let p = 0; p < width * height; p++) {
+    if (soft[p] < 0.5 || morphHi.data[p * 4 + 3] < 16) continue;
+    samples.push(punchLight[p]);
+  }
+  samples.sort((a, b) => a - b);
+  const pick = (q) => samples[Math.floor(q * (samples.length - 1))] ?? 0.5;
+  const loLight = samples.length ? pick(SHADE_PCT_LO) : 0.2;
+  const hiLight = samples.length ? pick(SHADE_PCT_HI) : 0.9;
+  const lightSpan = Math.max(1e-3, hiLight - loLight);
+
+  const maneSamples = [];
+  for (let p = 0; p < width * height; p++) {
+    if (soft[p] < 0.5 || maneMask[p] < 0.4) continue;
+    maneSamples.push(horseLuma[p]);
+  }
+  maneSamples.sort((a, b) => a - b);
+  const maneAt = (q) =>
+    maneSamples[Math.floor(q * (maneSamples.length - 1))] ?? 0.5;
+  const maneLo = maneSamples.length ? maneAt(0.06) : 0.35;
+  const maneHi = maneSamples.length ? maneAt(0.94) : 0.92;
+  const maneSpan = Math.max(1e-3, maneHi - maneLo);
+
+  const scale = width / SIZE;
+  const shadeField = new Float32Array(width * height);
+  for (let p = 0; p < width * height; p++) {
+    const i = p * 4;
+    if (soft[p] < 0.06 || morphHi.data[i + 3] < 16) continue;
+    const x = (p % width) / scale;
+    const y = ((p / width) | 0) / scale;
+    const t = punchLight[p];
+    const grain = (fbm(x * 1.1 + y * 0.3, y * 1.7, 29, 3) - 0.5) * MATTE_GRAIN;
+    const mottle =
+      (fbm(x * 0.28 + y * 0.08, y * 0.34, 37, 3) - 0.5) * MATTE_MOTTLE;
+    const lit = clamp((t - loLight) / lightSpan);
+    shadeField[p] = clamp(
+      SHADE_MIN +
+        (SHADE_TOP - SHADE_MIN) * Math.pow(lit, SHADE_GAMMA) +
+        grain +
+        mottle,
+      0,
+      SHADE_TOP,
+    );
+  }
   const out = Buffer.alloc(width * height * 4);
   for (let p = 0; p < width * height; p++) {
     const i = p * 4;
     const cov = soft[p];
     if (cov < 0.06 || morphHi.data[i + 3] < 16) continue;
-    const palGrain = palLuma[p] - palBlur[p];
-    const bayGrain = bayLuma[p] - bayBlur[p];
-    const form = palForm[p] - palLuma[p];
-    const t = Math.pow(clamp((palForm[p] * 255 - 38) / 172), 1.36);
-    let r = 162 + t * 93;
-    let g = 160 + t * 94;
-    let b = 155 + t * 97;
-    r += palGrain * 52 + bayGrain * 62 - form * 70;
-    g += palGrain * 46 + bayGrain * 56 - form * 64;
-    b += palGrain * 38 + bayGrain * 48 - form * 56;
-    out[i] = clampByte(r);
-    out[i + 1] = clampByte(g);
-    out[i + 2] = clampByte(b);
+    let shade = shadeField[p];
+    const mane = maneMask[p];
+    if (mane > 0.01) {
+      const maneLit = clamp((horseLuma[p] - maneLo) / maneSpan);
+      const maneShade =
+        SHADE_MIN + (SHADE_TOP - SHADE_MIN) * Math.pow(maneLit, 0.9);
+      shade = shade * (1 - mane) + maneShade * mane;
+    }
+    const [cr, cg, cb] = whiteFromMorph(morphHi.data, i);
+    out[i] = clampByte((WHITE[0] * 0.42 + cr * 0.58) * shade);
+    out[i + 1] = clampByte((WHITE[1] * 0.42 + cg * 0.58) * shade);
+    out[i + 2] = clampByte((WHITE[2] * 0.42 + cb * 0.58) * shade);
     out[i + 3] = Math.min(morphHi.data[i + 3], clampByte(255 * cov));
   }
 
-  const defringed = defringeSilhouette(out, morphHi.data, width, height, 1);
+  const painted = blurRgbMasked(out, maneMask, width, height, MANE_PAINT_BLUR);
+  const defringed = defringeSilhouette(painted, morphHi.data, width, height, 2);
+  const maneBuf = Buffer.alloc(width * height * 4);
+  for (let p = 0; p < width * height; p++) {
+    const i = p * 4;
+    maneBuf[i] = maneBuf[i + 1] = maneBuf[i + 2] = 255;
+    maneBuf[i + 3] = clampByte(maneMask[p] * 255);
+  }
   const { data: downRaw } = await sharp(defringed, {
     raw: { width, height, channels: 4 },
   })
     .resize(SIZE, SIZE, { kernel: 'mitchell' })
     .raw()
     .toBuffer({ resolveWithObject: true });
-  const smooth = featherAlpha(downRaw, SIZE, SIZE, 1);
+  const { data: maneDown } = await sharp(maneBuf, {
+    raw: { width, height, channels: 4 },
+  })
+    .resize(SIZE, SIZE, { kernel: 'mitchell' })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const mane512 = new Float32Array(SIZE * SIZE);
+  for (let p = 0; p < SIZE * SIZE; p++) {
+    mane512[p] = maneDown[p * 4 + 3] / 255;
+  }
+  const smoothed = blurRgbMasked(downRaw, mane512, SIZE, SIZE, 1);
+  clipToMorph(smoothed, morph512.data, SIZE);
 
   await mkdir(path.dirname(dest), { recursive: true });
-  await sharp(smooth, { raw: { width: SIZE, height: SIZE, channels: 4 } })
+  await sharp(smoothed, { raw: { width: SIZE, height: SIZE, channels: 4 } })
     .png({ compressionLevel: 9 })
     .toFile(dest);
   console.log('wrote', path.relative(ROOT, dest));

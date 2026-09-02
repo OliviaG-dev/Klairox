@@ -27,8 +27,17 @@ const SCALE = WORK / SIZE;
  *
  * `head` is the head window in 512 space used to refine the registration, and
  * `eye` the near (viewer side) eye, measured on that build's own bay plate.
- * `nudges` collects per-marking satellite-patch fixes for that build's renders.
+ * `nudges` collects per-marking satellite-patch fixes for that build's renders,
+ * `shading` per-marking overrides of the default form/detail lighting gains,
+ * and `muzzle` the pink-skin band, whose height depends on the silhouette.
  */
+const DEFAULT_MUZZLE = {
+  rise: [112, 162],
+  fall: [148, 175],
+  tip: [122, 82],
+  strength: 0.48,
+};
+
 const BUILDS = {
   'Standard-OC': {
     renderDir: 'docs/images/horse-base/OC-Standard/markings/real',
@@ -46,6 +55,8 @@ const BUILDS = {
      * `to`, then dilates it by `grow`.
      */
     nudges: { snip: [{ from: [90, 68], to: [104, 77], grow: 4 }] },
+    shading: {},
+    muzzle: DEFAULT_MUZZLE,
   },
   Foal: {
     renderDir: 'docs/images/horse-base/foal/markings/real',
@@ -54,8 +65,39 @@ const BUILDS = {
     pluginDir: 'plugins/horse/layers/markings/Foal',
     docsDir: 'docs/images/horse-base/foal/markings',
     head: { x0: 60, y0: 24, x1: 180, y1: 180 },
-    eye: [128, 101],
+    // Pupil on the foal bay plate (512). Adult stamp coords sat too high
+    // and forward, so every marking that reached the socket got the same
+    // misplaced blue eye.
+    eye: [129, 101],
+    eyeRx: 17,
+    eyeRy: 11,
+    eyeTilt: -0.38,
+    eyeSoft: true,
     nudges: {},
+    /**
+     * The two long face stripes run the whole length of the nasal bone, so the
+     * default gains average their lighting away and they flatten into a ribbon.
+     * Steeper form gain and a deeper shadow floor let the far side of the nose
+     * drop into shade while the lit ridge stays near white.
+     */
+    shading: {
+      blaze: { form: 2.3, detail: 1.1, min: 0.6, max: 1.05 },
+      // Too narrow for a cross-nose gradient, so it leans on length-wise
+      // modelling and a tighter highlight cap to stop the band reading as neon.
+      'thin-blaze': { form: 2.9, detail: 1.35, min: 0.55, max: 1.06 },
+    },
+    /**
+     * The foal muzzle sits lower than the adult's, so the shared band bled
+     * pink halfway up the nose and the face read warmer than the tobiano
+     * patches next to it. Keep it on the nostrils and at the pie overlays'
+     * tint strength so both whites match.
+     */
+    muzzle: {
+      rise: [142, 163],
+      fall: [168, 184],
+      tip: [116, 84],
+      strength: 0.2,
+    },
   },
 };
 
@@ -77,10 +119,16 @@ const PLUGIN_ID = {
 /** Geometry of the build being extracted; `main` swaps these before painting. */
 let HEAD = BUILDS[DEFAULT_BUILD].head;
 let EYE = BUILDS[DEFAULT_BUILD].eye;
+let EYE_RX = 12;
+let EYE_RY = 10;
+let EYE_TILT = 0;
+let EYE_SOFT = false;
 let NUDGES = BUILDS[DEFAULT_BUILD].nudges;
+let SHADING = BUILDS[DEFAULT_BUILD].shading;
+let MUZZLE = BUILDS[DEFAULT_BUILD].muzzle;
 /** Soft radius of the eye stamp, in 512 space: iris, lids and socket. */
-const EYE_RX = 12;
-const EYE_RY = 10;
+const DEFAULT_EYE_RX = 12;
+const DEFAULT_EYE_RY = 10;
 
 /** Marking pixels are bright; brown coat highlights are bright *and* saturated. */
 const LUMA_LO = 148;
@@ -261,6 +309,25 @@ function register(refMask, srcMask, width, height) {
     best = refined;
   }
   return { ...best, bodyScore: coarse.score };
+}
+
+function sampleScalar(field, width, height, fx, fy) {
+  const x0 = Math.floor(fx);
+  const y0 = Math.floor(fy);
+  const ax = fx - x0;
+  const ay = fy - y0;
+  let acc = 0;
+  for (const [dx, dy, w] of [
+    [0, 0, (1 - ax) * (1 - ay)],
+    [1, 0, ax * (1 - ay)],
+    [0, 1, (1 - ax) * ay],
+    [1, 1, ax * ay],
+  ]) {
+    const x = Math.min(width - 1, Math.max(0, x0 + dx));
+    const y = Math.min(height - 1, Math.max(0, y0 + dy));
+    acc += field[y * width + x] * w;
+  }
+  return acc;
 }
 
 function sampleBilinear(data, width, height, fx, fy) {
@@ -519,11 +586,84 @@ function shiftField(src, moves, width, height) {
 }
 
 /**
+ * Per-marking path warp in 512 space. The thin-blaze render is a ruler-straight
+ * ribbon; a slow meander plus width pulse make it read as a real face marking.
+ */
+const STRIPE_WARP = {
+  'thin-blaze': {
+    sway: 1.8,
+    swaySlow: 0.006,
+    swayFine: 0.01,
+    pinch: 0.3,
+    pinchFreq: 0.026,
+    seed: 73,
+  },
+};
+
+function warpStripe(field, width, height, spec) {
+  if (!spec) return field;
+
+  const scale = width / SIZE;
+  const cx = new Float32Array(height).fill(-1);
+  for (let y = 0; y < height; y++) {
+    let sx = 0;
+    let w = 0;
+    for (let x = 0; x < width; x++) {
+      const v = field[y * width + x];
+      if (v < 0.08) continue;
+      sx += x * v;
+      w += v;
+    }
+    if (w > 0) cx[y] = sx / w;
+  }
+
+  const smoothed = new Float32Array(height).fill(-1);
+  const radius = Math.max(2, Math.round(3 * scale));
+  for (let y = 0; y < height; y++) {
+    if (cx[y] < 0) continue;
+    let s = 0;
+    let n = 0;
+    for (let dy = -radius; dy <= radius; dy++) {
+      const ny = y + dy;
+      if (ny < 0 || ny >= height || cx[ny] < 0) continue;
+      s += cx[ny];
+      n++;
+    }
+    smoothed[y] = n > 0 ? s / n : cx[y];
+  }
+
+  const out = new Float32Array(field.length);
+  const swayAmp = spec.sway * scale;
+  for (let y = 0; y < height; y++) {
+    const y512 = y / scale;
+    const slow = fbm(2.1, y512 * spec.swaySlow * 8, spec.seed, 3) - 0.5;
+    const fine = fbm(6.4, y512 * spec.swayFine * 8, spec.seed + 5, 2) - 0.5;
+    const sway = (slow * 2 + fine * 0.4) * swayAmp;
+    const pinch = clamp(
+      1 +
+        (fbm(9.2, y512 * spec.pinchFreq * 8, spec.seed + 11, 3) - 0.5) *
+          2 *
+          spec.pinch,
+      0.68,
+      1.38,
+    );
+    const rowCx = smoothed[y];
+    for (let x = 0; x < width; x++) {
+      const srcX = rowCx >= 0 ? rowCx + (x - rowCx - sway) / pinch : x - sway;
+      out[y * width + x] = sampleScalar(field, width, height, srcX, y);
+    }
+  }
+  return out;
+}
+
+/**
  * Break the matte boundary into hair. The render gives a clean photographic
  * edge, which reads as paint once it is flattened to an overlay, so the low
  * threshold is jittered by noise and a short fringe is added on the rim band.
  */
-function hairenEdge(field, width, height, seed) {
+function hairenEdge(field, width, height, seed, edge = {}) {
+  const hairAmp = edge.hair ?? 0.16;
+  const fringeAmp = edge.fringe ?? 0.24;
   const out = new Float32Array(field.length);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -532,11 +672,14 @@ function hairenEdge(field, width, height, seed) {
       if (cov < 0.02) continue;
       const hair = fbm(x * 0.5 + y * 0.14, y * 0.95, seed + 7, 4);
       const fringe = fbm(x * 1.5 + y * 0.28, y * 1.9, seed + 19, 3);
-      const lo = 0.16 + (hair - 0.5) * 0.16;
+      const lo = 0.16 + (hair - 0.5) * hairAmp;
       const shaped = Math.pow(smoothstep(lo, 0.64, cov), 0.85);
       const rim =
         smoothstep(0.06, 0.32, shaped) * (1 - smoothstep(0.42, 0.88, shaped));
-      out[p] = clamp(shaped * 0.95 + rim * fringe * 0.24);
+      // The core has to reach full opacity: capped below 1 it lets the coat
+      // bleed through, which tints the white warm on a bay and would drift on
+      // every other coat, so a blaze never matches an opaque pie patch.
+      out[p] = clamp(shaped + rim * fringe * fringeAmp);
     }
   }
   return out;
@@ -557,12 +700,14 @@ function whiteFromMorph(morph, i) {
 
 /**
  * Pink skin showing through sparse white hair on the muzzle (512 canvas space).
- * Matches the pie-overlay treatment but tuned for the head midline: stronger
- * toward the nostrils and nose tip, zero on the forehead star zone.
+ * `rise` and `fall` bound the band down the nasal midline and `tip` fades it
+ * toward the nose tip, so it stays off the forehead star zone.
  */
 function muzzlePinkFactor(x512, y512) {
-  const alongNose = smoothstep(112, 162, y512) * smoothstep(175, 148, y512);
-  const towardTip = smoothstep(122, 82, x512);
+  const alongNose =
+    smoothstep(MUZZLE.rise[0], MUZZLE.rise[1], y512) *
+    (1 - smoothstep(MUZZLE.fall[0], MUZZLE.fall[1], y512));
+  const towardTip = smoothstep(MUZZLE.tip[0], MUZZLE.tip[1], x512);
   return clamp(alongNose * (0.28 + towardTip * 0.72));
 }
 
@@ -572,7 +717,7 @@ function tintMuzzlePink(r, g, b, pink) {
   const pr = 234;
   const pg = 176;
   const pb = 168;
-  const k = pink * 0.48;
+  const k = pink * MUZZLE.strength;
   return [r * (1 - k) + pr * k, g * (1 - k) + pg * k, b * (1 - k) + pb * k];
 }
 
@@ -607,7 +752,11 @@ const DETAIL_GAIN = 0.7;
 const SHADE_MIN = 0.5;
 const SHADE_MAX = 1.3;
 
-function buildShading(lumaField, field, width, height) {
+function buildShading(lumaField, field, width, height, tuning = {}) {
+  const formGain = tuning.form ?? FORM_GAIN;
+  const detailGain = tuning.detail ?? DETAIL_GAIN;
+  const shadeMin = tuning.min ?? SHADE_MIN;
+  const shadeMax = tuning.max ?? SHADE_MAX;
   let sum = 0;
   let n = 0;
   for (let p = 0; p < width * height; p++) {
@@ -628,18 +777,34 @@ function buildShading(lumaField, field, width, height) {
   const shade = new Float32Array(width * height).fill(1);
   for (let p = 0; p < width * height; p++) {
     if (lumaField[p] < 0) continue;
-    const broad = (form[p] - mean) * FORM_GAIN;
-    const detail = (filled[p] - form[p]) * DETAIL_GAIN;
-    shade[p] = clamp(1 + broad + detail, SHADE_MIN, SHADE_MAX);
+    const broad = (form[p] - mean) * formGain;
+    const detail = (filled[p] - form[p]) * detailGain;
+    shade[p] = clamp(1 + broad + detail, shadeMin, shadeMax);
   }
   return shade;
 }
 
+/** Local eye coords and radial distance in the (optionally tilted) ellipse. */
+function eyeLocal(x512, y512) {
+  let dx = x512 - EYE[0];
+  let dy = y512 - EYE[1];
+  if (EYE_TILT !== 0) {
+    const c = Math.cos(EYE_TILT);
+    const s = Math.sin(EYE_TILT);
+    const rx = dx * c + dy * s;
+    const ry = -dx * s + dy * c;
+    dx = rx;
+    dy = ry;
+  }
+  return [dx, dy, Math.hypot(dx / EYE_RX, dy / EYE_RY)];
+}
+
 /** Soft elliptical weight for the eye stamp, in 512 space. */
 function eyeMask(x512, y512) {
-  const dx = (x512 - EYE[0]) / EYE_RX;
-  const dy = (y512 - EYE[1]) / EYE_RY;
-  return 1 - smoothstep(0.55, 1, Math.hypot(dx, dy));
+  const d = eyeLocal(x512, y512)[2];
+  const lo = EYE_SOFT ? 0.36 : 0.55;
+  const hi = EYE_SOFT ? 1.12 : 1;
+  return 1 - smoothstep(lo, hi, d);
 }
 
 /**
@@ -651,16 +816,72 @@ const EYE_PIVOT = 118;
 const EYE_CONTRAST = 1.3;
 const EYE_COOL = 8;
 
-function punchEye(r, g, b) {
-  return [
-    EYE_PIVOT + (r - EYE_PIVOT) * EYE_CONTRAST,
-    EYE_PIVOT + (g - EYE_PIVOT) * EYE_CONTRAST,
-    EYE_PIVOT + (b - EYE_PIVOT) * EYE_CONTRAST + EYE_COOL,
-  ];
+function punchEye(r, g, b, d, screenDy) {
+  const L = luma(r, g, b);
+  const blue = b - Math.max(r, g);
+  const iris = smoothstep(8, 20, blue) * smoothstep(70, 110, L);
+  const pupil = (1 - smoothstep(14, 42, L)) * (1 - smoothstep(0.16, 0.34, d));
+  const t = smoothstep(40, 102, L) * (1 - pupil);
+  const pr = EYE_PIVOT + (r - EYE_PIVOT) * EYE_CONTRAST;
+  const pg = EYE_PIVOT + (g - EYE_PIVOT) * EYE_CONTRAST;
+  const pb = EYE_PIVOT + (b - EYE_PIVOT) * EYE_CONTRAST + EYE_COOL;
+  let outR = r + (pr - r) * t;
+  let outG = g + (pg - g) * t;
+  let outB = b + (pb - b) * t;
+
+  const lid = (1 - iris) * (1 - pupil) * (1 - smoothstep(48, 165, L));
+  const below = smoothstep(0.6, 2.4, screenDy);
+  const margin = (1 - below) * lid;
+  const crease = below * (1 - iris) * (1 - pupil);
+
+  if (margin > 0.02) {
+    const shade = clamp(L / 80);
+    outR = outR * (1 - margin) + (220 + 14 * shade) * margin;
+    outG = outG * (1 - margin) + (150 + 26 * shade) * margin;
+    outB = outB * (1 - margin) + (144 + 22 * shade) * margin;
+  }
+  if (crease > 0.02) {
+    const fade = crease * (1 - smoothstep(175, 232, L));
+    outR = outR * (1 - fade) + 236 * fade;
+    outG = outG * (1 - fade) + 230 * fade;
+    outB = outB * (1 - fade) + 226 * fade;
+  }
+  return [outR, outG, outB];
+}
+
+/**
+ * Where the render's own iris lands after registration, in 512 space.
+ * The stamp is always painted on the coat socket (`EYE`); this offset maps
+ * the photoreal blue eye onto that socket when the fit is a few pixels off.
+ */
+function registeredEyeCenter(render, fit, width, height) {
+  const cx = (Math.round(HEAD.x0 * SCALE) + Math.round(HEAD.x1 * SCALE)) / 2;
+  const cy = (Math.round(HEAD.y0 * SCALE) + Math.round(HEAD.y1 * SCALE)) / 2;
+  const reach = Math.max(EYE_RX, EYE_RY) * 1.6 * SCALE;
+  const x0 = Math.max(0, Math.round(EYE[0] * SCALE - reach));
+  const x1 = Math.min(width - 1, Math.round(EYE[0] * SCALE + reach));
+  const y0 = Math.max(0, Math.round(EYE[1] * SCALE - reach));
+  const y1 = Math.min(height - 1, Math.round(EYE[1] * SCALE + reach));
+  let best = { score: -1e9, x: EYE[0], y: EYE[1] };
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const [fx, fy] = mapPoint(x, y, cx, cy, fit.s, fit.tx, fit.ty);
+      const [r, g, b, a] = sampleBilinear(render, width, height, fx, fy);
+      if (a < 140) continue;
+      const L = luma(r, g, b);
+      const blue = b - Math.max(r, g);
+      if (L > 110 && blue < 6) continue;
+      const score = 90 - L + Math.min(18, Math.max(0, blue));
+      if (score > best.score) {
+        best = { score, x: x / SCALE, y: y / SCALE };
+      }
+    }
+  }
+  return [best.x, best.y];
 }
 
 /** True when the marking actually covers the eye (bald face and friends). */
-function coversEye(field, width) {
+function coversEye(field, width, minAvg = 0.45) {
   let sum = 0;
   let n = 0;
   for (let dy = -EYE_RY; dy <= EYE_RY; dy++) {
@@ -671,18 +892,23 @@ function coversEye(field, width) {
       n++;
     }
   }
-  return n > 0 && sum / n > 0.45;
+  return n > 0 && sum / n > minAvg;
 }
 
-function paintOverlay(field, morph, render, fit, moves, width, height) {
+function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
   const lumaField = shiftField(
     registeredLuma(render, fit, width, height),
     moves,
     width,
     height,
   );
-  const shade = buildShading(lumaField, field, width, height);
+  const shade = buildShading(lumaField, field, width, height, tuning);
   const stampEye = coversEye(field, width);
+  const [srcEyeX, srcEyeY] = stampEye
+    ? registeredEyeCenter(render, fit, width, height)
+    : EYE;
+  const sampleDx = (srcEyeX - EYE[0]) * SCALE;
+  const sampleDy = (srcEyeY - EYE[1]) * SCALE;
   const cx = (Math.round(HEAD.x0 * SCALE) + Math.round(HEAD.x1 * SCALE)) / 2;
   const cy = (Math.round(HEAD.y0 * SCALE) + Math.round(HEAD.y1 * SCALE)) / 2;
   const out = Buffer.alloc(width * height * 4);
@@ -697,14 +923,23 @@ function paintOverlay(field, morph, render, fit, moves, width, height) {
       let eye = stampEye ? eyeMask(x512, y512) : 0;
       if ((cov < 0.02 && eye <= 0.01) || morph[i + 3] < 16) continue;
 
-      // The render is already registered on the reference head, so its own eye
-      // lands on EYE — sharper and better lit than any donor coat.
       let iris = null;
       if (eye > 0) {
-        const [fx, fy] = mapPoint(x, y, cx, cy, fit.s, fit.tx, fit.ty);
+        const [fx, fy] = mapPoint(
+          x + sampleDx,
+          y + sampleDy,
+          cx,
+          cy,
+          fit.s,
+          fit.tx,
+          fit.ty,
+        );
         const [er, eg, eb, ea] = sampleBilinear(render, width, height, fx, fy);
-        if (ea >= 140) iris = punchEye(er, eg, eb);
-        else eye = 0;
+        if (ea >= 140) {
+          iris = punchEye(er, eg, eb, eyeLocal(x512, y512)[2], y512 - EYE[1]);
+        } else {
+          eye = 0;
+        }
       }
 
       let [r, g, b] = whiteFromMorph(morph, i);
@@ -780,7 +1015,13 @@ async function main() {
   );
   HEAD = spec.head;
   EYE = spec.eye;
+  EYE_RX = spec.eyeRx ?? DEFAULT_EYE_RX;
+  EYE_RY = spec.eyeRy ?? DEFAULT_EYE_RY;
+  EYE_TILT = spec.eyeTilt ?? 0;
+  EYE_SOFT = spec.eyeSoft === true;
   NUDGES = spec.nudges;
+  SHADING = spec.shading;
+  MUZZLE = spec.muzzle;
 
   const bay = await loadRaw(spec.bay, WORK);
   const morph = await loadRaw(spec.morph, WORK);
@@ -819,7 +1060,10 @@ async function main() {
       height,
       NUDGES[id],
     );
-    field = hairenEdge(nudged, width, height, 41 + index * 17);
+    const shape = STRIPE_WARP[id];
+    field = warpStripe(nudged, width, height, shape);
+    if (shape) field = blurField(field, width, height, 1);
+    field = hairenEdge(field, width, height, 41 + index * 17, shape);
     field = blurField(field, width, height, 1);
 
     let area = 0;
@@ -833,6 +1077,7 @@ async function main() {
       moves,
       width,
       height,
+      SHADING[id],
     );
     const overlayPath = path.join(ROOT, out, `${id}.png`);
     await writeResized(overlay, width, height, overlayPath);

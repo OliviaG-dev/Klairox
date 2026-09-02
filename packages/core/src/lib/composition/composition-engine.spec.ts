@@ -100,7 +100,7 @@ describe('buildCompositionPlan', () => {
     const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
     const plan = buildCompositionPlan(plugin, {
       coat: 'chestnut',
-      pie: 'tobiano',
+      pie: 'overo',
       markings: 'blaze',
     });
     const painted = plan.layers.map((layer) => layer.layerId);
@@ -113,7 +113,38 @@ describe('buildCompositionPlan', () => {
     expect(plan.hiddenLayers).toContain('markings');
     expect(
       plan.layers.find((layer) => layer.layerId === 'pie')?.assetPath,
-    ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/pie/tobiano.png'));
+    ).toBe(path.resolve(HORSE_PLUGIN_DIR, 'layers/pie/overo.png'));
+  });
+
+  it('keeps face markings over a tobiano, which has a solid head', async () => {
+    const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
+    const plan = buildCompositionPlan(plugin, {
+      coat: 'chestnut',
+      pie: 'tobiano',
+      markings: 'blaze',
+    });
+    const painted = plan.layers.map((layer) => layer.layerId);
+
+    expect(painted).toContain('markings');
+    expect(painted.indexOf('markings')).toBeGreaterThan(painted.indexOf('pie'));
+    expect(plan.hiddenLayers).not.toContain('markings');
+  });
+
+  it('keeps foal face markings over a foal tobiano', async () => {
+    const plugin = await loadPlugin(HORSE_PLUGIN_DIR);
+    const plan = buildCompositionPlan(plugin, {
+      body: 'foal',
+      'coat-foal': 'chestnut',
+      'pie-foal': 'tobiano',
+      'markings-foal': 'blaze',
+    });
+    const painted = plan.layers.map((layer) => layer.layerId);
+
+    expect(painted).toContain('markings-foal');
+    expect(painted.indexOf('markings-foal')).toBeGreaterThan(
+      painted.indexOf('pie-foal'),
+    );
+    expect(plan.hiddenLayers).not.toContain('markings-foal');
   });
 
   it('paints foal pie over the foal coat', async () => {

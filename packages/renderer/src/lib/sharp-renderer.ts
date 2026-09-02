@@ -1,6 +1,13 @@
 import type { ImageFormat } from '@klairox/plugin-sdk';
 import sharp, { type OverlayOptions, type Sharp } from 'sharp';
-import type { Renderer, RenderRequest, ResizeRequest } from '@klairox/core';
+import {
+  isPieOverlayLayer,
+  mixPieOverDest,
+  type Renderer,
+  type RenderLayer,
+  type RenderRequest,
+  type ResizeRequest,
+} from '@klairox/core';
 import { SHARP_BLEND_MODES } from './blend-modes.js';
 import { parseHexColor } from './color.js';
 import { prepareLayerImage } from './layer-image.js';
@@ -34,14 +41,33 @@ export class SharpRenderer implements Renderer {
       })),
     );
 
-    const composition = sharp({
-      create: {
-        width: canvas.width,
-        height: canvas.height,
-        channels: RGBA_CHANNELS,
-        background: parseHexColor(canvas.background),
-      },
-    }).composite(overlays);
+    const blank = (): Sharp =>
+      sharp({
+        create: {
+          width: canvas.width,
+          height: canvas.height,
+          channels: RGBA_CHANNELS,
+          background: parseHexColor(canvas.background),
+        },
+      });
+
+    let composition: Sharp;
+    if (!layers.some(shouldMixPie)) {
+      composition = blank().composite(overlays);
+    } else {
+      composition = blank();
+      for (let i = 0; i < layers.length; i++) {
+        const layer = layers[i];
+        const overlay = overlays[i];
+        if (shouldMixPie(layer)) {
+          composition = await mixPieLayer(composition, overlay, layer);
+        } else {
+          composition = sharp(
+            await composition.composite([overlay]).png().toBuffer(),
+          );
+        }
+      }
+    }
 
     if (resizeTo === undefined) {
       return this.encode(composition, format).toBuffer();
@@ -62,6 +88,69 @@ export class SharpRenderer implements Renderer {
           quality === undefined ? {} : { compressionLevel: quality },
         );
   }
+}
+
+function shouldMixPie(layer: RenderLayer): boolean {
+  return (
+    layer.layerId !== undefined &&
+    isPieOverlayLayer(layer.layerId) &&
+    layer.blendMode === 'normal'
+  );
+}
+
+async function mixPieLayer(
+  current: Sharp,
+  overlay: OverlayOptions,
+  layer: RenderLayer,
+): Promise<Sharp> {
+  const dest = await current
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const input = overlay.input;
+  if (!Buffer.isBuffer(input)) {
+    throw new Error('Pie overlay input must be a prepared image buffer');
+  }
+  const src = await sharp(input)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const full = new Uint8ClampedArray(dest.data.length);
+  const ox = layer.offset.x;
+  const oy = layer.offset.y;
+  const srcWidth = src.info.width;
+  const destWidth = dest.info.width;
+  const destHeight = dest.info.height;
+
+  for (let y = 0; y < src.info.height; y++) {
+    const dy = y + oy;
+    if (dy < 0 || dy >= destHeight) {
+      continue;
+    }
+    for (let x = 0; x < srcWidth; x++) {
+      const dx = x + ox;
+      if (dx < 0 || dx >= destWidth) {
+        continue;
+      }
+      const si = (y * srcWidth + x) * RGBA_CHANNELS;
+      const di = (dy * destWidth + dx) * RGBA_CHANNELS;
+      full[di] = src.data[si];
+      full[di + 1] = src.data[si + 1];
+      full[di + 2] = src.data[si + 2];
+      full[di + 3] = src.data[si + 3];
+    }
+  }
+
+  const destPixels = new Uint8ClampedArray(dest.data);
+  mixPieOverDest(destPixels, full);
+  return sharp(Buffer.from(destPixels), {
+    raw: {
+      width: destWidth,
+      height: destHeight,
+      channels: RGBA_CHANNELS,
+    },
+  });
 }
 
 function resize(pipeline: Sharp, resizeTo: ResizeRequest): Sharp {

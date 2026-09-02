@@ -10,6 +10,8 @@ export interface RenderLayer {
   readonly opacity: number;
   readonly blendMode: BlendMode;
   readonly offset: Offset;
+  /** Set when the request comes from a composition plan. */
+  readonly layerId?: string;
 }
 
 export interface ResizeRequest {

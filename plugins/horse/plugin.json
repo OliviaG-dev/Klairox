@@ -422,17 +422,17 @@
     },
     {
       "id": "pie-hides-markings",
-      "description": "Pinto patterns already carry face white, so separate markings are not painted",
+      "description": "These pinto patterns already carry face white, so separate markings are not painted; tobiano keeps a solid head and allows them",
       "when": {
-        "pie": ["tobiano", "tovero", "overo", "splashed-white", "sabino"]
+        "pie": ["tovero", "overo", "splashed-white", "sabino"]
       },
       "hide": ["markings"]
     },
     {
       "id": "foal-pie-hides-foal-markings",
-      "description": "Foal pinto patterns already carry face white, so separate markings are not painted",
+      "description": "These foal pinto patterns already carry face white, so separate markings are not painted; tobiano keeps a solid head and allows them",
       "when": {
-        "pie-foal": ["tobiano", "tovero", "overo", "splashed-white", "sabino"]
+        "pie-foal": ["tovero", "overo", "splashed-white", "sabino"]
       },
       "hide": ["markings-foal"]
     },

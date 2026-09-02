@@ -649,8 +649,7 @@ function warpStripe(field, width, height, spec) {
     );
     const rowCx = smoothed[y];
     for (let x = 0; x < width; x++) {
-      const srcX =
-        rowCx >= 0 ? rowCx + (x - rowCx - sway) / pinch : x - sway;
+      const srcX = rowCx >= 0 ? rowCx + (x - rowCx - sway) / pinch : x - sway;
       out[y * width + x] = sampleScalar(field, width, height, srcX, y);
     }
   }
@@ -937,13 +936,7 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
         );
         const [er, eg, eb, ea] = sampleBilinear(render, width, height, fx, fy);
         if (ea >= 140) {
-          iris = punchEye(
-            er,
-            eg,
-            eb,
-            eyeLocal(x512, y512)[2],
-            y512 - EYE[1],
-          );
+          iris = punchEye(er, eg, eb, eyeLocal(x512, y512)[2], y512 - EYE[1]);
         } else {
           eye = 0;
         }

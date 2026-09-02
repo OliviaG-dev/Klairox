@@ -1,11 +1,6 @@
 import { isPieOverlayLayer, mixPieOverDest } from './mix-pie-over-dest.js';
 
-function px(
-  r: number,
-  g: number,
-  b: number,
-  a: number,
-): Uint8ClampedArray {
+function px(r: number, g: number, b: number, a: number): Uint8ClampedArray {
   return new Uint8ClampedArray([r, g, b, a]);
 }
 

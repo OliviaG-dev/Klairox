@@ -27,6 +27,8 @@ const SCALE = WORK / SIZE;
  *
  * `head` is the head window in 512 space used to refine the registration, and
  * `eye` the near (viewer side) eye, measured on that build's own bay plate.
+ * `socketRx`/`socketRy` optionally hide the coat eye around a tighter iris
+ * stamp; `eyeLids: 'dark'` keeps photoreal lashes instead of pink flesh.
  * `nudges` collects per-marking satellite-patch fixes for that build's renders,
  * `shading` per-marking overrides of the default form/detail lighting gains,
  * and `muzzle` the pink-skin band, whose height depends on the silhouette.
@@ -67,12 +69,17 @@ const BUILDS = {
     head: { x0: 60, y0: 24, x1: 180, y1: 180 },
     // Pupil on the foal bay plate (512). Adult stamp coords sat too high
     // and forward, so every marking that reached the socket got the same
-    // misplaced blue eye.
+    // misplaced blue eye. The iris itself is ~10×7; a larger soft stamp
+    // turned the lids into a pink oval and the pupil term ate the iris
+    // into a thin blue ring. `socket*` hides the bay eye around that.
     eye: [129, 101],
-    eyeRx: 17,
-    eyeRy: 11,
+    eyeRx: 10,
+    eyeRy: 6.5,
     eyeTilt: -0.38,
-    eyeSoft: true,
+    eyeSoft: false,
+    eyeLids: 'dark',
+    socketRx: 15,
+    socketRy: 13,
     nudges: {},
     /**
      * The two long face stripes run the whole length of the nasal bone, so the
@@ -123,6 +130,9 @@ let EYE_RX = 12;
 let EYE_RY = 10;
 let EYE_TILT = 0;
 let EYE_SOFT = false;
+let EYE_LIDS = 'pink';
+let SOCKET_RX = 0;
+let SOCKET_RY = 0;
 let NUDGES = BUILDS[DEFAULT_BUILD].nudges;
 let SHADING = BUILDS[DEFAULT_BUILD].shading;
 let MUZZLE = BUILDS[DEFAULT_BUILD].muzzle;
@@ -802,9 +812,29 @@ function eyeLocal(x512, y512) {
 /** Soft elliptical weight for the eye stamp, in 512 space. */
 function eyeMask(x512, y512) {
   const d = eyeLocal(x512, y512)[2];
-  const lo = EYE_SOFT ? 0.36 : 0.55;
-  const hi = EYE_SOFT ? 1.12 : 1;
+  const lo = EYE_SOFT ? 0.36 : EYE_LIDS === 'dark' ? 0.62 : 0.55;
+  const hi = EYE_SOFT ? 1.12 : EYE_LIDS === 'dark' ? 0.98 : 1;
   return 1 - smoothstep(lo, hi, d);
+}
+
+/**
+ * Opaque white fill of the coat socket, larger than the iris stamp, so the
+ * bay eye cannot show through around a tight iris.
+ */
+function socketMask(x512, y512) {
+  if (SOCKET_RX <= 0 || SOCKET_RY <= 0) return 0;
+  let dx = x512 - EYE[0];
+  let dy = y512 - EYE[1];
+  if (EYE_TILT !== 0) {
+    const c = Math.cos(EYE_TILT);
+    const s = Math.sin(EYE_TILT);
+    const rx = dx * c + dy * s;
+    const ry = -dx * s + dy * c;
+    dx = rx;
+    dy = ry;
+  }
+  const d = Math.hypot(dx / SOCKET_RX, dy / SOCKET_RY);
+  return 1 - smoothstep(0.85, 1.04, d);
 }
 
 /**
@@ -816,7 +846,7 @@ const EYE_PIVOT = 118;
 const EYE_CONTRAST = 1.3;
 const EYE_COOL = 8;
 
-function punchEye(r, g, b, d, screenDy) {
+function punchEye(r, g, b, d, screenDy, localDy) {
   const L = luma(r, g, b);
   const blue = b - Math.max(r, g);
   const iris = smoothstep(8, 20, blue) * smoothstep(70, 110, L);
@@ -828,6 +858,26 @@ function punchEye(r, g, b, d, screenDy) {
   let outR = r + (pr - r) * t;
   let outG = g + (pg - g) * t;
   let outB = b + (pb - b) * t;
+
+  if (EYE_LIDS === 'dark') {
+    const upper =
+      (1 - smoothstep(-0.4, 0.8, localDy)) *
+      smoothstep(0.38, 0.64, d) *
+      (1 - smoothstep(0.88, 1.12, d));
+    const lower =
+      smoothstep(0.15, 1.1, localDy) *
+      smoothstep(0.55, 0.78, d) *
+      (1 - smoothstep(0.94, 1.16, d)) *
+      0.32;
+    const lash =
+      Math.max(upper, lower) * (1 - smoothstep(140, 200, L));
+    if (lash > 0.02) {
+      outR = outR * (1 - lash) + 22 * lash;
+      outG = outG * (1 - lash) + 18 * lash;
+      outB = outB * (1 - lash) + 20 * lash;
+    }
+    return [outR, outG, outB];
+  }
 
   const lid = (1 - iris) * (1 - pupil) * (1 - smoothstep(48, 165, L));
   const below = smoothstep(0.6, 2.4, screenDy);
@@ -921,7 +971,10 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
       const x512 = x / SCALE;
       const y512 = y / SCALE;
       let eye = stampEye ? eyeMask(x512, y512) : 0;
-      if ((cov < 0.02 && eye <= 0.01) || morph[i + 3] < 16) continue;
+      const socket = stampEye ? socketMask(x512, y512) : 0;
+      if ((cov < 0.02 && eye <= 0.01 && socket <= 0.01) || morph[i + 3] < 16) {
+        continue;
+      }
 
       let iris = null;
       if (eye > 0) {
@@ -936,7 +989,15 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
         );
         const [er, eg, eb, ea] = sampleBilinear(render, width, height, fx, fy);
         if (ea >= 140) {
-          iris = punchEye(er, eg, eb, eyeLocal(x512, y512)[2], y512 - EYE[1]);
+          const local = eyeLocal(x512, y512);
+          iris = punchEye(
+            er,
+            eg,
+            eb,
+            local[2],
+            y512 - EYE[1],
+            local[1],
+          );
         } else {
           eye = 0;
         }
@@ -955,7 +1016,7 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
         b = b * (1 - eye) + iris[2] * eye;
       }
 
-      const alpha = Math.max(cov, eye);
+      const alpha = Math.max(cov, eye, socket);
       out[i] = clampByte(r);
       out[i + 1] = clampByte(g);
       out[i + 2] = clampByte(b);
@@ -1019,6 +1080,9 @@ async function main() {
   EYE_RY = spec.eyeRy ?? DEFAULT_EYE_RY;
   EYE_TILT = spec.eyeTilt ?? 0;
   EYE_SOFT = spec.eyeSoft === true;
+  EYE_LIDS = spec.eyeLids === 'dark' ? 'dark' : 'pink';
+  SOCKET_RX = spec.socketRx ?? 0;
+  SOCKET_RY = spec.socketRy ?? 0;
   NUDGES = spec.nudges;
   SHADING = spec.shading;
   MUZZLE = spec.muzzle;

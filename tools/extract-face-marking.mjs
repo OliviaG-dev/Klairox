@@ -869,8 +869,7 @@ function punchEye(r, g, b, d, screenDy, localDy) {
       smoothstep(0.55, 0.78, d) *
       (1 - smoothstep(0.94, 1.16, d)) *
       0.32;
-    const lash =
-      Math.max(upper, lower) * (1 - smoothstep(140, 200, L));
+    const lash = Math.max(upper, lower) * (1 - smoothstep(140, 200, L));
     if (lash > 0.02) {
       outR = outR * (1 - lash) + 22 * lash;
       outG = outG * (1 - lash) + 18 * lash;
@@ -990,14 +989,7 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
         const [er, eg, eb, ea] = sampleBilinear(render, width, height, fx, fy);
         if (ea >= 140) {
           const local = eyeLocal(x512, y512);
-          iris = punchEye(
-            er,
-            eg,
-            eb,
-            local[2],
-            y512 - EYE[1],
-            local[1],
-          );
+          iris = punchEye(er, eg, eb, local[2], y512 - EYE[1], local[1]);
         } else {
           eye = 0;
         }

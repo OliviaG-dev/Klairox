@@ -14,6 +14,9 @@
     "example:sync-editor-plugin": "node tools/sync-editor-horse-plugin.mjs",
     "example:generate": "node packages/cli/dist/bin.js generate plugins/horse --out dist/assets",
     "example:batch": "node packages/cli/dist/bin.js batch plugins/horse --out dist/batch",
+    "stalloria:assets": "node tools/generate-stalloria-assets.mjs",
+    "stalloria:assets:dry": "node tools/generate-stalloria-assets.mjs --dry-run",
+    "stalloria:test-1024": "node tools/generate-stalloria-test-1024.mjs",
     "schema": "node tools/generate-plugin-schema.mjs",
     "editor": "node tools/sync-editor-horse-plugin.mjs && nx serve editor",
     "editor:build": "node tools/sync-editor-horse-plugin.mjs && nx build editor"

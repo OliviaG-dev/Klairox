@@ -181,7 +181,9 @@ async function main() {
     'utf8',
   );
 
-  console.log(`Done: ${generated} generated, ${failed} failed → ${path.relative(ROOT, out)}`);
+  console.log(
+    `Done: ${generated} generated, ${failed} failed → ${path.relative(ROOT, out)}`,
+  );
   if (failed > 0) process.exitCode = 1;
 }
 

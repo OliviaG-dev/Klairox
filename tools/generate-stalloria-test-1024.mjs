@@ -79,7 +79,10 @@ async function scaleLayer(layer, dest) {
 async function writeFramedPreview(source, dest, frameW, frameH) {
   const fitted = Math.min(frameW, frameH);
   const horse = await sharp(source)
-    .resize(fitted, fitted, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .resize(fitted, fitted, {
+      fit: 'contain',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
     .png()
     .toBuffer();
   const top = Math.round(frameH * 0.78 - fitted * 0.78);
@@ -150,13 +153,17 @@ async function main() {
   if (png) {
     const crop1024 = path.join(OUT_DIR, 'crop-preview-1024.png');
     await writeFramedPreview(png.filePath, crop1024, 320, 400);
-    console.log(`  wrote ${path.relative(ROOT, crop1024)} (Stalloria-style frame)`);
+    console.log(
+      `  wrote ${path.relative(ROOT, crop1024)} (Stalloria-style frame)`,
+    );
   }
 
   if (await exists(EXISTING_512)) {
     const crop512 = path.join(OUT_DIR, 'crop-preview-512.png');
     await writeFramedPreview(EXISTING_512, crop512, 320, 400);
-    console.log(`  wrote ${path.relative(ROOT, crop512)} (current 512, same frame)`);
+    console.log(
+      `  wrote ${path.relative(ROOT, crop512)} (current 512, same frame)`,
+    );
   }
 
   await writeFile(

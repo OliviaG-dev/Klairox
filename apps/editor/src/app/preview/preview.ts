@@ -120,6 +120,9 @@ function drawPieOverDest(
   ctx.putImageData(dest, 0, 0);
 }
 
+/** Editor-only CSS scale; composition still renders at plugin canvas size. */
+const PREVIEW_DISPLAY_SCALE = 0.5;
+
 @Component({
   selector: 'kx-preview',
   templateUrl: './preview.html',
@@ -129,6 +132,16 @@ export class Preview {
   protected readonly session = inject(EditorSession);
   private readonly canvasRef =
     viewChild<ElementRef<HTMLCanvasElement>>('stageCanvas');
+
+  protected displaySize(canvas: { width: number; height: number }): {
+    width: number;
+    height: number;
+  } {
+    return {
+      width: Math.round(canvas.width * PREVIEW_DISPLAY_SCALE),
+      height: Math.round(canvas.height * PREVIEW_DISPLAY_SCALE),
+    };
+  }
 
   constructor() {
     effect(() => {
@@ -141,11 +154,13 @@ export class Preview {
       }
 
       const { width, height } = plugin.manifest.canvas;
+      const displayW = Math.round(width * PREVIEW_DISPLAY_SCALE);
+      const displayH = Math.round(height * PREVIEW_DISPLAY_SCALE);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
 
       const ctx = canvas.getContext('2d');
       if (ctx === null) {

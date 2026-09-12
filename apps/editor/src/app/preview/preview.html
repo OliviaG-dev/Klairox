@@ -7,11 +7,12 @@
     </p>
   </header>
 
-  @if (session.plugin(); as plugin) {
+  @if (session.plugin(); as plugin) { @let size =
+  displaySize(plugin.manifest.canvas);
   <div
     class="stage"
-    [style.width.px]="plugin.manifest.canvas.width"
-    [style.height.px]="plugin.manifest.canvas.height"
+    [style.width.px]="size.width"
+    [style.height.px]="size.height"
   >
     <canvas #stageCanvas class="stage__canvas" aria-label="Composition preview">
     </canvas>

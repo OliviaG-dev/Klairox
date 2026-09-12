@@ -6,8 +6,9 @@
   "description": "Reference plugin: a layered horse assembled from photoreal coats on a shared silhouette.",
   "license": "MIT",
   "canvas": {
-    "width": 512,
-    "height": 512
+    "width": 1024,
+    "height": 1024,
+    "background": "#00000000"
   },
   "layers": [
     {
@@ -450,7 +451,7 @@
   },
   "exports": {
     "formats": ["png", "webp"],
-    "thumbnail": { "width": 128 },
+    "thumbnail": { "width": 256 },
     "metadata": true
   }
 }

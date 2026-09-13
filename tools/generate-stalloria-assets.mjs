@@ -1,9 +1,11 @@
 /**
  * Bakes the Stalloria horse matrix at 1024×1024 into dist/stalloria/horses.
  *
- * Coat RGB comes from the photoreal source (native ≥1024), masked with the
- * plugin silhouette alpha so corners stay transparent. Other layers are
- * resized with Lanczos and keep their alpha. Canvas background is transparent.
+ * Coat RGB comes from the photoreal source (native ≥1024). If the plate already
+ * has alpha (`npm run stalloria:reexport-alpha`), that matte is kept and
+ * intersected with the plugin silhouette; otherwise the plate is peeled out of
+ * its black void at bake time. Other layers are Lanczos-resized. Canvas
+ * background is transparent.
  *
  *   node tools/generate-stalloria-assets.mjs
  *   node tools/generate-stalloria-assets.mjs --dry-run
@@ -224,7 +226,15 @@ function floodExterior(alpha, rgb, width, height, voidMax) {
  */
 function cleanLayerRgba(data, width, height) {
   return dilateRgbIntoTransparent(
-    repaintDarkRim(despeckleMatte(data, width, height), width, height),
+    erodeDarkRimAlpha(
+      fadeBlackHalo(
+        repaintDarkRim(despeckleMatte(data, width, height), width, height),
+        width,
+        height,
+      ),
+      width,
+      height,
+    ),
     width,
     height,
     2,
@@ -296,7 +306,7 @@ function despeckleMatte(data, width, height) {
         if (solid >= 7) out[i + 3] = Math.round(alphaSum / solid);
         continue;
       }
-      if (clear >= 6 && luma(data[i], data[i + 1], data[i + 2]) < 14) {
+      if (clear >= 5 && luma(data[i], data[i + 1], data[i + 2]) < 18) {
         out[i + 3] = 0;
       }
     }
@@ -305,13 +315,21 @@ function despeckleMatte(data, width, height) {
 }
 
 /** Thickness of the rim whose colour is suspect, in 1024px pixels. */
-const RIM_WIDTH = 2;
+const RIM_WIDTH = 3;
 /** Neighbourhood the rim borrows its colour from. */
-const RIM_DONOR_RADIUS = 4;
+const RIM_DONOR_RADIUS = 5;
 /** Only lift a rim pixel this much darker than its neighbourhood. */
-const RIM_DARK_MARGIN = 8;
+const RIM_DARK_MARGIN = 5;
 /** Repaint passes, so wisps made only of rim pixels are reached too. */
-const RIM_PASSES = 3;
+const RIM_PASSES = 5;
+/**
+ * Soft-kill threshold: rim pixels this much darker than a *bright enough*
+ * neighbourhood lose alpha. Jet-black coats keep a dark neighbourhood, so
+ * their silhouette is untouched.
+ */
+const HALO_GAP = 14;
+const HALO_MIN_DONOR = 22;
+const HALO_HARD_GAP = 28;
 
 /** Pixels that still have alpha but sit within RIM_WIDTH of transparency. */
 function rimMask(data, width, height) {
@@ -398,6 +416,141 @@ function repaintDarkRim(data, width, height) {
     if (repainted === 0) break;
   }
   return out;
+}
+
+/**
+ * Drop or soften rim pixels that are still a black halo against a lighter coat.
+ * Requires the local donors to be bright enough (`HALO_MIN_DONOR`) so a
+ * jet-black mane/leg, whose neighbourhood is also dark, is never cut.
+ */
+function fadeBlackHalo(data, width, height) {
+  const out = Buffer.from(data);
+  const rim = rimMask(data, width, height);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (!rim[p]) continue;
+      const i = p * 4;
+      const edgeL = luma(data[i], data[i + 1], data[i + 2]);
+
+      let sr = 0;
+      let sg = 0;
+      let sb = 0;
+      let n = 0;
+      let clear = 0;
+      for (let dy = -RIM_DONOR_RADIUS; dy <= RIM_DONOR_RADIUS; dy++) {
+        for (let dx = -RIM_DONOR_RADIUS; dx <= RIM_DONOR_RADIUS; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          const np = ny * width + nx;
+          const j = np * 4;
+          if (data[j + 3] < 8) {
+            clear++;
+            continue;
+          }
+          if (rim[np]) continue;
+          sr += data[j];
+          sg += data[j + 1];
+          sb += data[j + 2];
+          n++;
+        }
+      }
+      if (n < 4) continue;
+
+      const donorL = luma(sr / n, sg / n, sb / n);
+      if (donorL < HALO_MIN_DONOR) continue;
+      const gap = donorL - edgeL;
+      if (gap < HALO_GAP) continue;
+
+      // Hard void lace: mostly transparent neighbours and much darker than coat.
+      if (clear >= 2 && gap >= HALO_HARD_GAP && edgeL < 18) {
+        out[i + 3] = 0;
+        continue;
+      }
+
+      // Soften the halo and recolour toward the coat.
+      const fade = Math.min(
+        1,
+        (gap - HALO_GAP) / Math.max(1, HALO_HARD_GAP - HALO_GAP),
+      );
+      out[i] = Math.round(sr / n);
+      out[i + 1] = Math.round(sg / n);
+      out[i + 2] = Math.round(sb / n);
+      out[i + 3] = clampByte(data[i + 3] * (1 - 0.85 * fade));
+    }
+  }
+
+  // One-pixel alpha erode on pure-black rim against a clearly lighter coat.
+  const eroded = Buffer.from(out);
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const p = y * width + x;
+      if (!rim[p]) continue;
+      const i = p * 4;
+      if (out[i + 3] === 0) continue;
+      const edgeL = luma(out[i], out[i + 1], out[i + 2]);
+      if (edgeL >= 10) continue;
+      let donorSum = 0;
+      let donorN = 0;
+      let clearN = 0;
+      for (const [dx, dy] of [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+      ]) {
+        const j = ((y + dy) * width + (x + dx)) * 4;
+        if (out[j + 3] < 8) {
+          clearN++;
+          continue;
+        }
+        if (rim[(y + dy) * width + (x + dx)]) continue;
+        donorSum += luma(out[j], out[j + 1], out[j + 2]);
+        donorN++;
+      }
+      if (clearN === 0 || donorN === 0) continue;
+      if (donorSum / donorN < HALO_MIN_DONOR) continue;
+      eroded[i + 3] = 0;
+    }
+  }
+  return eroded;
+}
+
+/**
+ * Last resort on the outer contour: drop near-black pixels that touch
+ * transparency. Uses a 1px contact test (not the wide rim mask) so thin hair
+ * strands and dark coat interiors are not punched full of holes.
+ */
+function erodeDarkRimAlpha(data, width, height) {
+  let current = Buffer.from(data);
+  for (let pass = 0; pass < 2; pass++) {
+    const out = Buffer.from(current);
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        const i = (y * width + x) * 4;
+        if (current[i + 3] === 0) continue;
+        if (luma(current[i], current[i + 1], current[i + 2]) >= 18) continue;
+        let touchesClear = false;
+        for (const [dx, dy] of [
+          [-1, 0],
+          [1, 0],
+          [0, -1],
+          [0, 1],
+        ]) {
+          if (current[((y + dy) * width + (x + dx)) * 4 + 3] < 8) {
+            touchesClear = true;
+            break;
+          }
+        }
+        if (!touchesClear) continue;
+        out[i + 3] = 0;
+      }
+    }
+    current = out;
+  }
+  return current;
 }
 
 /** Spread coat RGB into transparent pixels so later downscales do not pull black. */
@@ -637,22 +790,47 @@ function scaleLayer(layer) {
     const photo = photorealPath(layer.layerId, layer.optionId);
 
     if (photo && (await exists(photo))) {
-      const alpha = await silhouetteAlpha(layer.assetPath);
-      const rgb = await sharp(photo)
-        .resize(SIZE, SIZE, {
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-          kernel: 'mitchell',
+      const photoMeta = await sharp(photo).metadata();
+      const morphAlpha = await silhouetteAlpha(layer.assetPath);
+
+      if (photoMeta.hasAlpha) {
+        // Source already carries a real matte (see reexport-photoreal-alpha.mjs).
+        const { data, info } = await sharp(photo)
+          .ensureAlpha()
+          .resize(SIZE, SIZE, {
+            fit: 'contain',
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+            kernel: 'mitchell',
+          })
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+        for (let p = 0; p < SIZE * SIZE; p++) {
+          const i = p * 4;
+          data[i + 3] = Math.min(data[i + 3], morphAlpha[p]);
+        }
+        const rgba = cleanLayerRgba(data, info.width, info.height);
+        await sharp(rgba, {
+          raw: { width: SIZE, height: SIZE, channels: 4 },
         })
-        .removeAlpha()
-        .raw()
-        .toBuffer({ resolveWithObject: true });
-      const rgba = maskPhotorealCoat(rgb, alpha, SIZE, SIZE);
-      await sharp(rgba, {
-        raw: { width: SIZE, height: SIZE, channels: 4 },
-      })
-        .png()
-        .toFile(dest);
+          .png()
+          .toFile(dest);
+      } else {
+        const rgb = await sharp(photo)
+          .resize(SIZE, SIZE, {
+            fit: 'contain',
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+            kernel: 'mitchell',
+          })
+          .removeAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+        const rgba = maskPhotorealCoat(rgb, morphAlpha, SIZE, SIZE);
+        await sharp(rgba, {
+          raw: { width: SIZE, height: SIZE, channels: 4 },
+        })
+          .png()
+          .toFile(dest);
+      }
     } else {
       const { data, info } = await sharp(layer.assetPath)
         .ensureAlpha()

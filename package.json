@@ -17,6 +17,9 @@
     "stalloria:assets": "node tools/generate-stalloria-assets.mjs",
     "stalloria:assets:dry": "node tools/generate-stalloria-assets.mjs --dry-run",
     "stalloria:test-1024": "node tools/generate-stalloria-test-1024.mjs",
+    "stalloria:reexport-alpha": "node tools/reexport-photoreal-alpha.mjs",
+    "stalloria:propagate-foal-cutout": "node tools/propagate-foal-cutout-alpha.mjs",
+    "example:sync-plugin-coats": "node tools/sync-plugin-coats-from-photoreal.mjs",
     "schema": "node tools/generate-plugin-schema.mjs",
     "editor": "node tools/sync-editor-horse-plugin.mjs && nx serve editor",
     "editor:build": "node tools/sync-editor-horse-plugin.mjs && nx build editor"

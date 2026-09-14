@@ -7,7 +7,8 @@ import {
 } from '@angular/core';
 import type { BlendMode } from '@klairox/plugin-sdk';
 import { EditorSession, type PreviewLayer } from '../editor-session';
-import { isPieOverlayLayer, mixPieOverDest } from './mix-pie-over-dest';
+import { applyCoatSheen } from './apply-coat-sheen';
+import { isWhiteOverlayLayer, mixPieOverDest } from './mix-pie-over-dest';
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
 
@@ -77,13 +78,20 @@ async function drawLayers(
     ctx.save();
     ctx.globalAlpha = layer.opacity;
     ctx.globalCompositeOperation = canvasBlendMode(layer.blendMode);
-    if (isPieOverlayLayer(layer.layerId) && layer.blendMode === 'normal') {
+    if (isWhiteOverlayLayer(layer.layerId) && layer.blendMode === 'normal') {
       drawPieOverDest(ctx, img, layer, width, height);
     } else {
       ctx.drawImage(img, layer.offsetX, layer.offsetY, width, height);
     }
     ctx.restore();
   }
+
+  const composed = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+  applyCoatSheen(composed.data, {
+    width: ctx.canvas.width,
+    height: ctx.canvas.height,
+  });
+  ctx.putImageData(composed, 0, 0);
 }
 
 function drawPieOverDest(

@@ -1,7 +1,8 @@
 import type { ImageFormat } from '@klairox/plugin-sdk';
 import sharp, { type OverlayOptions, type Sharp } from 'sharp';
 import {
-  isPieOverlayLayer,
+  applyCoatSheen,
+  isWhiteOverlayLayer,
   mixPieOverDest,
   type Renderer,
   type RenderLayer,
@@ -69,6 +70,8 @@ export class SharpRenderer implements Renderer {
       }
     }
 
+    composition = await withCoatSheen(composition);
+
     if (resizeTo === undefined) {
       return this.encode(composition, format).toBuffer();
     }
@@ -93,9 +96,25 @@ export class SharpRenderer implements Renderer {
 function shouldMixPie(layer: RenderLayer): boolean {
   return (
     layer.layerId !== undefined &&
-    isPieOverlayLayer(layer.layerId) &&
+    isWhiteOverlayLayer(layer.layerId) &&
     layer.blendMode === 'normal'
   );
+}
+
+async function withCoatSheen(composition: Sharp): Promise<Sharp> {
+  const { data, info } = await composition
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const pixels = new Uint8ClampedArray(data);
+  applyCoatSheen(pixels, { width: info.width, height: info.height });
+  return sharp(Buffer.from(pixels), {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: RGBA_CHANNELS,
+    },
+  });
 }
 
 async function mixPieLayer(

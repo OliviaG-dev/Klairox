@@ -208,9 +208,9 @@ describe('SharpRenderer', () => {
     });
 
     expect(await readPixel(output, 0, 0)).toEqual({
-      r: 128,
-      g: 128,
-      b: 128,
+      r: 85,
+      g: 83,
+      b: 81,
       a: 255,
     });
   });

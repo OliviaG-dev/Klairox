@@ -95,7 +95,8 @@ function sampleMean(data, width, height, pred) {
 function applyPal(bayL, bayPal, creamPal, lift = 0) {
   const span = Math.max(10, bayPal.lmax - bayPal.lmin);
   const t = Math.min(1, Math.max(0, (bayL - bayPal.lmin) / span));
-  const mapped = creamPal.lmin + t * Math.max(12, creamPal.lmax - creamPal.lmin);
+  const mapped =
+    creamPal.lmin + t * Math.max(12, creamPal.lmax - creamPal.lmin);
   const targetL = mapped * (1 - lift) + creamPal.L * lift;
   const s = creamPal.L > 1 ? targetL / creamPal.L : 1;
   return [creamPal.r * s, creamPal.g * s, creamPal.b * s];
@@ -161,29 +162,72 @@ async function rebuild(job) {
   const cream = await load(job.cream);
   const { width, height } = bay;
 
-  const bodyPal = sampleMean(cream.data, cream.width, cream.height, (x, y, r, g, b) => {
-    const L = luma(r, g, b);
-    return y > height * 0.32 && y < height * 0.62 && x > width * 0.35 && x < width * 0.7 && L > 140;
-  });
-  const manePal = sampleMean(cream.data, cream.width, cream.height, (x, y, r, g, b) => {
-    const L = luma(r, g, b);
-    return y < height * 0.42 && x > width * 0.28 && x < width * 0.55 && L > 150;
-  });
-  const tailPal = sampleMean(cream.data, cream.width, cream.height, (x, y, r, g, b) => {
-    const L = luma(r, g, b);
-    return x > width * 0.72 && y > height * 0.28 && y < height * 0.72 && L > 140;
-  });
-  const legPal = sampleMean(cream.data, cream.width, cream.height, (x, y, r, g, b) => {
-    const L = luma(r, g, b);
-    return y > height * 0.68 && L > 100;
-  });
-  const muzzlePal = sampleMean(cream.data, cream.width, cream.height, (x, y, r, g, b) => {
-    return x < width * 0.2 && y > height * 0.16 && y < height * 0.32 && r > g + 8;
-  });
+  const bodyPal = sampleMean(
+    cream.data,
+    cream.width,
+    cream.height,
+    (x, y, r, g, b) => {
+      const L = luma(r, g, b);
+      return (
+        y > height * 0.32 &&
+        y < height * 0.62 &&
+        x > width * 0.35 &&
+        x < width * 0.7 &&
+        L > 140
+      );
+    },
+  );
+  const manePal = sampleMean(
+    cream.data,
+    cream.width,
+    cream.height,
+    (x, y, r, g, b) => {
+      const L = luma(r, g, b);
+      return (
+        y < height * 0.42 && x > width * 0.28 && x < width * 0.55 && L > 150
+      );
+    },
+  );
+  const tailPal = sampleMean(
+    cream.data,
+    cream.width,
+    cream.height,
+    (x, y, r, g, b) => {
+      const L = luma(r, g, b);
+      return (
+        x > width * 0.72 && y > height * 0.28 && y < height * 0.72 && L > 140
+      );
+    },
+  );
+  const legPal = sampleMean(
+    cream.data,
+    cream.width,
+    cream.height,
+    (x, y, r, g, b) => {
+      const L = luma(r, g, b);
+      return y > height * 0.68 && L > 100;
+    },
+  );
+  const muzzlePal = sampleMean(
+    cream.data,
+    cream.width,
+    cream.height,
+    (x, y, r, g, b) => {
+      return (
+        x < width * 0.2 && y > height * 0.16 && y < height * 0.32 && r > g + 8
+      );
+    },
+  );
 
   const bayBody = sampleMean(bay.data, width, height, (x, y, r, g, b) => {
     const L = luma(r, g, b);
-    return y > height * 0.32 && y < height * 0.62 && x > width * 0.35 && x < width * 0.7 && L > 45;
+    return (
+      y > height * 0.32 &&
+      y < height * 0.62 &&
+      x > width * 0.35 &&
+      x < width * 0.7 &&
+      L > 45
+    );
   });
   const bayMane = sampleMean(bay.data, width, height, (x, y, r, g, b) => {
     const L = luma(r, g, b);
@@ -215,11 +259,20 @@ async function rebuild(job) {
       const nx = x / width;
 
       const dark = 1 - Math.min(1, L / 62);
-      const mane =
-        nx > 0.26 && nx < 0.56 && ny < 0.46 && nx > 0.3 ? dark : 0;
+      const mane = nx > 0.26 && nx < 0.56 && ny < 0.46 && nx > 0.3 ? dark : 0;
       const tail = nx > 0.74 && ny > 0.22 && ny < 0.72 ? dark : 0;
-      const legs = ny > 0.67 ? Math.min(1, (ny - 0.67) / 0.06) * (1 - Math.min(1, L / 95)) : 0;
-      const muzzle = gauss(x, y, width * 0.13, height * 0.225, width * 0.055, height * 0.055);
+      const legs =
+        ny > 0.67
+          ? Math.min(1, (ny - 0.67) / 0.06) * (1 - Math.min(1, L / 95))
+          : 0;
+      const muzzle = gauss(
+        x,
+        y,
+        width * 0.13,
+        height * 0.225,
+        width * 0.055,
+        height * 0.055,
+      );
       const [ex, ey] = job.eye;
       const eye = gauss(x, y, ex, ey, 11, 8);
 
@@ -240,9 +293,24 @@ async function rebuild(job) {
 
       const bodyC = applyPal(L, bayBody, bodyPal, 0.35);
       const maneC = applyPal(L, bayMane.n ? bayMane : bayBody, manePal, 0.72);
-      const tailC = applyPal(L, bayTail.n ? bayTail : bayMane, tailPal.n ? tailPal : manePal, 0.72);
-      const legC = applyPal(L, bayLeg.n ? bayLeg : bayBody, legPal.n ? legPal : bodyPal, 0.45);
-      const muzC = applyPal(L, bayMuzzle.n ? bayMuzzle : bayBody, muzzlePal.n ? muzzlePal : bodyPal, 0.25);
+      const tailC = applyPal(
+        L,
+        bayTail.n ? bayTail : bayMane,
+        tailPal.n ? tailPal : manePal,
+        0.72,
+      );
+      const legC = applyPal(
+        L,
+        bayLeg.n ? bayLeg : bayBody,
+        legPal.n ? legPal : bodyPal,
+        0.45,
+      );
+      const muzC = applyPal(
+        L,
+        bayMuzzle.n ? bayMuzzle : bayBody,
+        muzzlePal.n ? muzzlePal : bodyPal,
+        0.25,
+      );
 
       out[i] = clampByte(
         bodyC[0] * wBody +

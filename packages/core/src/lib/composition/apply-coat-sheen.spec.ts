@@ -28,10 +28,8 @@ describe('applyCoatSheen', () => {
     const white = px(228, 220, 210, 255);
     applyCoatSheen(brown);
     applyCoatSheen(white);
-    const brownLift =
-      luma(brown[0], brown[1], brown[2]) - luma(140, 78, 42);
-    const whiteLift =
-      luma(white[0], white[1], white[2]) - luma(228, 220, 210);
+    const brownLift = luma(brown[0], brown[1], brown[2]) - luma(140, 78, 42);
+    const whiteLift = luma(white[0], white[1], white[2]) - luma(228, 220, 210);
     expect(whiteLift).toBeGreaterThan(brownLift);
   });
 

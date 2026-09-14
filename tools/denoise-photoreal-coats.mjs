@@ -136,9 +136,7 @@ async function main() {
       const before = await neighborHf(file);
       await denoiseFile(file, coat);
       const after = await neighborHf(file);
-      console.log(
-        `  ${coat} hf ${before.toFixed(2)} → ${after.toFixed(2)}`,
-      );
+      console.log(`  ${coat} hf ${before.toFixed(2)} → ${after.toFixed(2)}`);
     }
   }
 }

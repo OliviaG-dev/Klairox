@@ -69,9 +69,21 @@ function sampleBilinear(src, width, height, fx, fy) {
   const mix = (a, b, t) => a + (b - a) * t;
   return [
     mix(mix(src[i00], src[i10], tx), mix(src[i01], src[i11], tx), ty),
-    mix(mix(src[i00 + 1], src[i10 + 1], tx), mix(src[i01 + 1], src[i11 + 1], tx), ty),
-    mix(mix(src[i00 + 2], src[i10 + 2], tx), mix(src[i01 + 2], src[i11 + 2], tx), ty),
-    mix(mix(src[i00 + 3], src[i10 + 3], tx), mix(src[i01 + 3], src[i11 + 3], tx), ty),
+    mix(
+      mix(src[i00 + 1], src[i10 + 1], tx),
+      mix(src[i01 + 1], src[i11 + 1], tx),
+      ty,
+    ),
+    mix(
+      mix(src[i00 + 2], src[i10 + 2], tx),
+      mix(src[i01 + 2], src[i11 + 2], tx),
+      ty,
+    ),
+    mix(
+      mix(src[i00 + 3], src[i10 + 3], tx),
+      mix(src[i01 + 3], src[i11 + 3], tx),
+      ty,
+    ),
   ];
 }
 
@@ -80,11 +92,7 @@ function glassTint(r, g, b) {
   if (L < 42) {
     return [r, g, b];
   }
-  return [
-    r * 0.78,
-    g * 0.92,
-    Math.min(255, b * 1.18 + 18),
-  ];
+  return [r * 0.78, g * 0.92, Math.min(255, b * 1.18 + 18)];
 }
 
 function stampCreamEye(dest, destW, destH, src, srcW, srcH, eye) {

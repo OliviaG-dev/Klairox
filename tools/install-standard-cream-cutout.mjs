@@ -85,9 +85,7 @@ function syncEditor() {
 }
 
 const cutoutArg = process.argv[2];
-const cutoutPath = cutoutArg
-  ? path.resolve(cutoutArg)
-  : DEFAULT_CUTOUT;
+const cutoutPath = cutoutArg ? path.resolve(cutoutArg) : DEFAULT_CUTOUT;
 
 const { data, info } = await sharp(cutoutPath)
   .ensureAlpha()
@@ -99,12 +97,7 @@ const { data, info } = await sharp(cutoutPath)
   .raw()
   .toBuffer({ resolveWithObject: true });
 
-const cleaned = dilateRgbIntoTransparent(
-  data,
-  info.width,
-  info.height,
-  2,
-);
+const cleaned = dilateRgbIntoTransparent(data, info.width, info.height, 2);
 
 if (!cutoutArg) {
   await copyFile(cutoutPath, DEFAULT_CUTOUT).catch(() => {});

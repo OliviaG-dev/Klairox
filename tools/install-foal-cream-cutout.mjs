@@ -117,9 +117,7 @@ function buildLumaMap(data, width, height, bins = 72) {
     sums[b].b += data[i + 2];
     sums[b].n++;
   }
-  const map = sums.map((s) =>
-    s.n ? [s.r / s.n, s.g / s.n, s.b / s.n] : null,
-  );
+  const map = sums.map((s) => (s.n ? [s.r / s.n, s.g / s.n, s.b / s.n] : null));
   let last = null;
   for (let i = 0; i < map.length; i++) {
     if (map[i]) last = map[i];
@@ -153,9 +151,7 @@ function harmonizeWarmth(foal, standard, width, height) {
     const target = map[bin];
     if (!target) continue;
     const t =
-      WARMTH_PEAK *
-      smoothstep(72, 118, L) *
-      (1 - smoothstep(208, 238, L));
+      WARMTH_PEAK * smoothstep(72, 118, L) * (1 - smoothstep(208, 238, L));
     out[i] = clampByte(r * (1 - t) + target[0] * t);
     out[i + 1] = clampByte(g * (1 - t) + target[1] * t);
     out[i + 2] = clampByte(b * (1 - t) + target[2] * t);
@@ -262,19 +258,9 @@ const { data: foalRaw, info } = await sharp(cutoutPath)
   .toBuffer({ resolveWithObject: true });
 
 const { data: standard } = await loadRgba(STANDARD_REF);
-const warmed = harmonizeWarmth(
-  foalRaw,
-  standard,
-  info.width,
-  info.height,
-);
+const warmed = harmonizeWarmth(foalRaw, standard, info.width, info.height);
 const eyed = enhanceEyeBlue(warmed, info.width, info.height);
-const cleaned = dilateRgbIntoTransparent(
-  eyed,
-  info.width,
-  info.height,
-  2,
-);
+const cleaned = dilateRgbIntoTransparent(eyed, info.width, info.height, 2);
 
 if (cutoutArg) {
   await copyFile(cutoutPath, DEFAULT_CUTOUT);

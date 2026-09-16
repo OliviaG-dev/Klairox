@@ -149,8 +149,12 @@ function whitenEyeSocket(dest, destW, destH, eye) {
       const i = (y * destW + x) * 4;
       const fade = 1 - smoothstep(0.9, 1.04, dSocket);
       dest[i] = clampByte(MARKING_WHITE[0] * fade + dest[i] * (1 - fade));
-      dest[i + 1] = clampByte(MARKING_WHITE[1] * fade + dest[i + 1] * (1 - fade));
-      dest[i + 2] = clampByte(MARKING_WHITE[2] * fade + dest[i + 2] * (1 - fade));
+      dest[i + 1] = clampByte(
+        MARKING_WHITE[1] * fade + dest[i + 1] * (1 - fade),
+      );
+      dest[i + 2] = clampByte(
+        MARKING_WHITE[2] * fade + dest[i + 2] * (1 - fade),
+      );
       dest[i + 3] = Math.max(dest[i + 3], clampByte(255 * fade));
     }
   }
@@ -385,12 +389,7 @@ async function fixTarget(target) {
   const dest = await loadRgba(target.plugin);
   const src = await loadRgba(target.source);
   if (target.socketRx) {
-    whitenEyeSocket(
-      dest.data,
-      dest.info.width,
-      dest.info.height,
-      target,
-    );
+    whitenEyeSocket(dest.data, dest.info.width, dest.info.height, target);
   }
   stampCreamEye(
     dest.data,
@@ -402,18 +401,8 @@ async function fixTarget(target) {
     target,
   );
   if (target.socketRx) {
-    cleanEyeHalo(
-      dest.data,
-      dest.info.width,
-      dest.info.height,
-      target,
-    );
-    drawFoalEyeContour(
-      dest.data,
-      dest.info.width,
-      dest.info.height,
-      target,
-    );
+    cleanEyeHalo(dest.data, dest.info.width, dest.info.height, target);
+    drawFoalEyeContour(dest.data, dest.info.width, dest.info.height, target);
   }
   await writePng(dest.data, dest.info.width, dest.info.height, target.plugin);
   for (const rel of [target.docs, target.editor].filter(Boolean)) {
@@ -440,8 +429,7 @@ function syncEditor() {
 
 const select = process.argv[2];
 const jobs = TARGETS.filter(
-  (target) =>
-    !select || target.label.toLowerCase() === select.toLowerCase(),
+  (target) => !select || target.label.toLowerCase() === select.toLowerCase(),
 );
 if (jobs.length === 0) {
   throw new Error(`No bald-eye target named "${select}"`);

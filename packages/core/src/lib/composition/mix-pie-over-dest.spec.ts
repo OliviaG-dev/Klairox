@@ -45,6 +45,11 @@ describe('mixPieOverDest', () => {
     expect(b).toBe(168);
   });
 
+  it('preserves dark bald-face lash ink above the pupil floor', () => {
+    expect(isEyeTissue(62, 58, 59)).toBe(true);
+    expect(liftPieWhite(62, 58, 59)).toEqual([62, 58, 59]);
+  });
+
   it('keeps shade/light separation on pie-matched whites', () => {
     const shade = liftPieWhite(176, 172, 166);
     const lit = liftPieWhite(238, 232, 224);

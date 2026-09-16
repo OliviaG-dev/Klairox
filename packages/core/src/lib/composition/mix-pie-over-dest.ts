@@ -39,6 +39,12 @@ export function isEyeTissue(r: number, g: number, b: number): boolean {
   if (L < 52) {
     return true;
   }
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  // Dark lid ink on bald overlays sits just above the pupil floor; without
+  // this, liftPieWhite turns lashes into clay rings around the iris.
+  if (L < 72 && chroma < 40) {
+    return true;
+  }
   const blue = b - Math.max(r, g);
   if (blue > 5 && L > 55 && L < 205) {
     return true;

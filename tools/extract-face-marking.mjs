@@ -72,9 +72,9 @@ const BUILDS = {
     // misplaced blue eye. The iris itself is ~10×7; a larger soft stamp
     // turned the lids into a pink oval and the pupil term ate the iris
     // into a thin blue ring. `socket*` hides the bay eye around that.
-    eye: [129, 101],
-    eyeRx: 10,
-    eyeRy: 6.5,
+    eye: [130, 103],
+    eyeRx: 13,
+    eyeRy: 8,
     eyeTilt: -0.38,
     eyeSoft: false,
     eyeLids: 'dark',

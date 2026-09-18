@@ -50,8 +50,10 @@ export function isEyeTissue(r: number, g: number, b: number): boolean {
     return true;
   }
   // Pink lids / muzzle skin on markings (not white hair).
+  // L ceiling sits above lit rosy-white so nostril leather is not graded
+  // back to tobiano clay.
   const warm = r - Math.max(g, b);
-  if (warm > 8 && L > 70 && L < 215 && r - Math.min(g, b) > 14) {
+  if (warm > 8 && L > 70 && L < 236 && r - Math.min(g, b) > 14) {
     return true;
   }
   return false;

@@ -50,6 +50,13 @@ describe('mixPieOverDest', () => {
     expect(liftPieWhite(62, 58, 59)).toEqual([62, 58, 59]);
   });
 
+  it('preserves rosy muzzle skin on white face markings', () => {
+    expect(isEyeTissue(220, 178, 168)).toBe(true);
+    expect(liftPieWhite(220, 178, 168)).toEqual([220, 178, 168]);
+    expect(isEyeTissue(236, 200, 188)).toBe(true);
+    expect(liftPieWhite(236, 200, 188)).toEqual([236, 200, 188]);
+  });
+
   it('keeps shade/light separation on pie-matched whites', () => {
     const shade = liftPieWhite(176, 172, 166);
     const lit = liftPieWhite(238, 232, 224);

@@ -36,7 +36,7 @@ export function isEyeTissue(r: number, g: number, b: number): boolean {
     return true;
   }
   const warm = r - Math.max(g, b);
-  if (warm > 8 && L > 70 && L < 215 && r - Math.min(g, b) > 14) {
+  if (warm > 8 && L > 70 && L < 236 && r - Math.min(g, b) > 14) {
     return true;
   }
   return false;

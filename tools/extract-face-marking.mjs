@@ -38,6 +38,8 @@ const DEFAULT_MUZZLE = {
   fall: [148, 175],
   tip: [122, 82],
   strength: 0.48,
+  /** How much overlay alpha thins as pink skin takes over (0 = opaque cap). */
+  fade: 0.5,
 };
 
 const BUILDS = {
@@ -59,6 +61,7 @@ const BUILDS = {
     nudges: { snip: [{ from: [90, 68], to: [104, 77], grow: 4 }] },
     shading: {},
     muzzle: DEFAULT_MUZZLE,
+    cuts: {},
   },
   Foal: {
     renderDir: 'docs/images/horse-base/foal/markings/real',
@@ -80,7 +83,12 @@ const BUILDS = {
     eyeLids: 'dark',
     socketRx: 15,
     socketRy: 13,
-    nudges: {},
+    nudges: {
+      // Chin speck under the blaze. dropBelow keeps the pink nostril tail.
+      blaze: [{ from: [99, 176], drop: true, radius: 8, dropBelow: 164 }],
+      // Lower interrupted-stripe dash: shorter, on the muzzle, a bit wider.
+      stripe: [{ from: [88, 142], to: [82, 151], grow: 3 }],
+    },
     /**
      * The two long face stripes run the whole length of the nasal bone, so the
      * default gains average their lighting away and they flatten into a ribbon.
@@ -94,16 +102,23 @@ const BUILDS = {
       'thin-blaze': { form: 2.9, detail: 1.35, min: 0.55, max: 1.06 },
     },
     /**
-     * The foal muzzle sits lower than the adult's, so the shared band bled
-     * pink halfway up the nose and the face read warmer than the tobiano
-     * patches next to it. Keep it on the nostrils and at the pie overlays'
-     * tint strength so both whites match.
+     * Pink nostril leather graded up into the white blaze. Keep overlay
+     * coverage so a grey/cream coat cannot replace the pink with its own
+     * muzzle. `fade` only softens the last millimetres of hair.
      */
     muzzle: {
-      rise: [142, 163],
-      fall: [168, 184],
-      tip: [116, 84],
-      strength: 0.2,
+      rise: [126, 150],
+      fall: [160, 174],
+      tip: [108, 78],
+      strength: 0.64,
+      fade: 0.18,
+    },
+    /**
+     * Interrupted stripe: a race, not a liste. Gap across mid-nose so the
+     * marking reads as two dashes instead of one continuous strip.
+     */
+    cuts: {
+      stripe: [{ y0: 99, y1: 138, feather: 5 }],
     },
   },
 };
@@ -136,6 +151,7 @@ let SOCKET_RY = 0;
 let NUDGES = BUILDS[DEFAULT_BUILD].nudges;
 let SHADING = BUILDS[DEFAULT_BUILD].shading;
 let MUZZLE = BUILDS[DEFAULT_BUILD].muzzle;
+let CUTS = BUILDS[DEFAULT_BUILD].cuts ?? {};
 /** Soft radius of the eye stamp, in 512 space: iris, lids and socket. */
 const DEFAULT_EYE_RX = 12;
 const DEFAULT_EYE_RY = 10;
@@ -546,18 +562,34 @@ function growPatch(field, dest, width, height, radius) {
 
 /**
  * Translate satellite blobs so their centroids land on `to`, in 512 space, and
- * optionally dilate them by `grow`. Also returns the pixel translations: the
- * render-derived shading has to travel with the patch, otherwise it would be
- * read off whatever the render shows at the destination — forelock, for snip.
+ * optionally dilate them by `grow`. `drop: true` removes the blob instead.
+ * Also returns the pixel translations: the render-derived shading has to
+ * travel with the patch, otherwise it would be read off whatever the render
+ * shows at the destination — forelock, for snip.
  */
 function nudgeBlobs(field, width, height, nudges) {
   const moves = [];
   if (!nudges?.length) return { field, moves };
 
   let out = Float32Array.from(field);
-  for (const { from, to, grow = 0 } of nudges) {
-    const blob = findBlob(field, width, height, from);
+  for (const {
+    from,
+    to,
+    grow = 0,
+    drop = false,
+    radius = 14,
+    dropBelow = 0,
+  } of nudges) {
+    const blob = findBlob(field, width, height, from, radius);
     if (!blob) continue;
+    if (drop) {
+      const yCut = dropBelow > 0 ? dropBelow * SCALE : 0;
+      for (const p of blob) {
+        if (dropBelow > 0 && ((p / width) | 0) < yCut) continue;
+        out[p] = 0;
+      }
+      continue;
+    }
     const [bx, by] = centroid(blob, width);
     const dx = Math.round(to[0] * SCALE - bx);
     const dy = Math.round(to[1] * SCALE - by);
@@ -578,6 +610,29 @@ function nudgeBlobs(field, width, height, nudges) {
     moves.push({ blob, dx, dy });
   }
   return { field: out, moves };
+}
+
+/**
+ * Open a horizontal gap in 512 space so a continuous stripe becomes two
+ * dashes. Feathered so the cut does not read as a hard crop.
+ */
+function cutGaps(field, width, height, cuts) {
+  if (!cuts?.length) return field;
+  const out = Float32Array.from(field);
+  const scale = width / SIZE;
+  for (const { y0, y1, feather = 5 } of cuts) {
+    const a = y0 * scale;
+    const b = y1 * scale;
+    const f = Math.max(1, feather * scale);
+    for (let y = 0; y < height; y++) {
+      const into = smoothstep(a, a + f, y) * (1 - smoothstep(b - f, b, y));
+      if (into <= 0) continue;
+      for (let x = 0; x < width; x++) {
+        out[y * width + x] *= 1 - into;
+      }
+    }
+  }
+  return out;
 }
 
 /** Replay nudgeBlobs' translations on a scalar field, destinations only. */
@@ -724,9 +779,9 @@ function muzzlePinkFactor(x512, y512) {
 /** Blend warm muzzle pink into lit white — like cream coat nostril skin. */
 function tintMuzzlePink(r, g, b, pink) {
   if (pink <= 0.001) return [r, g, b];
-  const pr = 234;
-  const pg = 176;
-  const pb = 168;
+  const pr = 232;
+  const pg = 162;
+  const pb = 154;
   const k = pink * MUZZLE.strength;
   return [r * (1 - k) + pr * k, g * (1 - k) + pg * k, b * (1 - k) + pb * k];
 }
@@ -1000,7 +1055,8 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
       r *= k;
       g *= k;
       b *= k;
-      [r, g, b] = tintMuzzlePink(r, g, b, muzzlePinkFactor(x512, y512));
+      const pink = muzzlePinkFactor(x512, y512);
+      [r, g, b] = tintMuzzlePink(r, g, b, pink);
 
       if (iris) {
         r = r * (1 - eye) + iris[0] * eye;
@@ -1008,7 +1064,10 @@ function paintOverlay(field, morph, render, fit, moves, width, height, tuning) {
         b = b * (1 - eye) + iris[2] * eye;
       }
 
-      const alpha = Math.max(cov, eye, socket);
+      const fade = MUZZLE.fade ?? 0;
+      const grain = fade > 0 ? fbm(x512 * 1.15, y512 * 1.45, 91, 3) : 0.5;
+      const thin = clamp(pink * fade * (0.7 + 0.55 * grain));
+      const alpha = Math.max(cov * (1 - thin), eye, socket);
       out[i] = clampByte(r);
       out[i + 1] = clampByte(g);
       out[i + 2] = clampByte(b);
@@ -1078,6 +1137,7 @@ async function main() {
   NUDGES = spec.nudges;
   SHADING = spec.shading;
   MUZZLE = spec.muzzle;
+  CUTS = spec.cuts ?? {};
 
   const bay = await loadRaw(spec.bay, WORK);
   const morph = await loadRaw(spec.morph, WORK);
@@ -1110,14 +1170,16 @@ async function main() {
     );
     field = blurField(field, width, height, 2);
     field = keepMainBlobs(field, width, height);
+    field = cutGaps(field, width, height, CUTS[id]);
     const { field: nudged, moves } = nudgeBlobs(
       field,
       width,
       height,
       NUDGES[id],
     );
+    field = nudged;
     const shape = STRIPE_WARP[id];
-    field = warpStripe(nudged, width, height, shape);
+    field = warpStripe(field, width, height, shape);
     if (shape) field = blurField(field, width, height, 1);
     field = hairenEdge(field, width, height, 41 + index * 17, shape);
     field = blurField(field, width, height, 1);

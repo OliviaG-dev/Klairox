@@ -401,9 +401,7 @@ function paintOverlay(soft, mane, palomino, bay, width, height) {
   const samples = [];
   for (let p = 0; p < width * height; p++) {
     if (soft[p] < 0.5 || bay[p * 4 + 3] < 16) continue;
-    samples.push(
-      formLight(p, palLuma, bayLuma, palForm, bayForm, mane[p]),
-    );
+    samples.push(formLight(p, palLuma, bayLuma, palForm, bayForm, mane[p]));
   }
   samples.sort((a, b) => a - b);
   const pick = (q) => samples[Math.floor(q * (samples.length - 1))] ?? 0.5;
@@ -449,11 +447,7 @@ function paintOverlay(soft, mane, palomino, bay, width, height) {
       const combed =
         maneFlat[p] * (1 + strand * 2.35 * MANE_SWING + split * 0.28) +
         hairMicro * MANE_DETAIL;
-      shade = clamp(
-        shade * (1 - m) + combed * m,
-        MANE_SHADE_FLOOR,
-        SHADE_TOP,
-      );
+      shade = clamp(shade * (1 - m) + combed * m, MANE_SHADE_FLOOR, SHADE_TOP);
     }
     const spec =
       Math.max(0, palLuma[p] - palForm[p]) * SPEC_GAIN +
@@ -589,9 +583,15 @@ function reportMatch(overlay, bay, width, height) {
         pieOn++;
         if (ba < 16) pieOut++;
       }
-      if (ba > 24 && pa < 16 && nearVoid(bay, width, height, x, y, 2) && nearPie(x, y, 6)) {
+      if (
+        ba > 24 &&
+        pa < 16 &&
+        nearVoid(bay, width, height, x, y, 2) &&
+        nearPie(x, y, 6)
+      ) {
         rimGap++;
-        if (y < height * 0.45 && x > width * 0.25 && x < width * 0.55) rimGapNeck++;
+        if (y < height * 0.45 && x > width * 0.25 && x < width * 0.55)
+          rimGapNeck++;
         if (y > height * 0.55) rimGapLegs++;
       }
     }
@@ -685,8 +685,18 @@ async function main() {
   for (let p = 0; p < field.length; p++) {
     binary[p] = field[p] > 0.38 ? 1 : 0;
   }
-  binary = erodeBinary(dilateBinary(binary, width, height, 2), width, height, 2);
-  binary = dilateBinary(erodeBinary(binary, width, height, 3), width, height, 3);
+  binary = erodeBinary(
+    dilateBinary(binary, width, height, 2),
+    width,
+    height,
+    2,
+  );
+  binary = dilateBinary(
+    erodeBinary(binary, width, height, 3),
+    width,
+    height,
+    3,
+  );
   const rounded = blurCoverage(binary, width, height, 5);
   for (let p = 0; p < binary.length; p++) {
     binary[p] = rounded[p] > 0.48 ? 1 : 0;

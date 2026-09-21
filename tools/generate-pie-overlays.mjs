@@ -4,6 +4,10 @@
  * One mask per pattern, reused on every coat: the white is lit from the clay
  * master so muscle shading survives, and only the silhouette is opaque.
  *
+ * Tobiano is painted on the bay cutout by dedicated scripts:
+ *   node tools/generate-standard-tobiano.mjs
+ *   node tools/generate-foal-tobiano-candidates.mjs
+ *
  * Usage:
  *   node tools/generate-pie-overlays.mjs
  *   node tools/generate-pie-overlays.mjs --no-sync
@@ -17,7 +21,7 @@ import sharp from 'sharp';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SIZE = 512;
 
-const PATTERNS = ['tobiano', 'tovero', 'overo', 'splashed-white', 'sabino'];
+const PATTERNS = ['tovero', 'overo', 'splashed-white', 'sabino'];
 
 const BUILDS = {
   standard: {

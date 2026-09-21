@@ -36,6 +36,14 @@ describe('mixPieOverDest', () => {
     expect(marking[0]).toBeGreaterThanOrEqual(marking[1]);
   });
 
+  it('maps Standard-OC bald paper white onto the same clay as pie', () => {
+    const pie = liftPieWhite(209, 205, 199);
+    const bald = liftPieWhite(247, 244, 236);
+    expect(isEyeTissue(247, 244, 236)).toBe(false);
+    expect(Math.abs(luma(...pie) - luma(...bald))).toBeLessThan(12);
+    expect(bald[0]).toBeLessThan(235);
+  });
+
   it('preserves glass-eye blue iris instead of washing to clay white', () => {
     expect(isEyeTissue(96, 118, 168)).toBe(true);
     const [r, g, b] = liftPieWhite(96, 118, 168);
@@ -50,6 +58,13 @@ describe('mixPieOverDest', () => {
     expect(liftPieWhite(62, 58, 59)).toEqual([62, 58, 59]);
   });
 
+  it('preserves rosy hoof horn instead of grading it to clay white', () => {
+    expect(isEyeTissue(236, 208, 192)).toBe(true);
+    expect(liftPieWhite(236, 208, 192)).toEqual([236, 208, 192]);
+    expect(isEyeTissue(198, 162, 148)).toBe(true);
+    expect(liftPieWhite(198, 162, 148)).toEqual([198, 162, 148]);
+  });
+
   it('preserves rosy muzzle skin on white face markings', () => {
     expect(isEyeTissue(220, 178, 168)).toBe(true);
     expect(liftPieWhite(220, 178, 168)).toEqual([220, 178, 168]);
@@ -60,7 +75,7 @@ describe('mixPieOverDest', () => {
   it('keeps shade/light separation on pie-matched whites', () => {
     const shade = liftPieWhite(176, 172, 166);
     const lit = liftPieWhite(238, 232, 224);
-    expect(luma(...lit) - luma(...shade)).toBeGreaterThan(12);
+    expect(luma(...lit) - luma(...shade)).toBeGreaterThan(14);
   });
 
   it('shades white with darker coat form more than with light coat', () => {

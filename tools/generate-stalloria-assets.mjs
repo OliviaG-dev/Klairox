@@ -11,6 +11,7 @@
  *   node tools/generate-stalloria-assets.mjs --dry-run
  *   node tools/generate-stalloria-assets.mjs --force
  *   node tools/generate-stalloria-assets.mjs --only stalloria-standard-palomino-pie-none-mark-none
+ *   node tools/generate-stalloria-assets.mjs --force --only stalloria-standard- --only pie-tobiano
  *   node tools/generate-stalloria-assets.mjs --out path/to/dir
  */
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -68,13 +69,13 @@ function parseArgs(argv) {
   let dryRun = false;
   let force = false;
   let out = DEFAULT_OUT;
-  let only = null;
+  const only = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--dry-run') dryRun = true;
     else if (arg === '--force') force = true;
     else if (arg === '--out') out = path.resolve(argv[++i] ?? DEFAULT_OUT);
-    else if (arg === '--only') only = argv[++i] ?? null;
+    else if (arg === '--only') only.push(argv[++i] ?? '');
   }
   return { dryRun, force, out, only };
 }
@@ -983,10 +984,12 @@ async function verifyPalomino(out) {
 async function main() {
   const { dryRun, force, out, only } = parseArgs(process.argv.slice(2));
   let jobs = buildJobs();
-  if (only) {
-    jobs = jobs.filter((job) => job.name === only);
+  if (only.length > 0) {
+    jobs = jobs.filter((job) =>
+      only.every((q) => q && (job.name === q || job.name.includes(q))),
+    );
     if (jobs.length === 0) {
-      throw new Error(`No job named "${only}"`);
+      throw new Error(`No job matching --only ${only.join(' ')}`);
     }
   }
 

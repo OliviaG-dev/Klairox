@@ -12,10 +12,11 @@ const PIE_WHITE_L = 205.4;
 
 /** Chroma pull toward pie clay. */
 const PIE_MATCH = 0.88;
-/** How far whites may deviate from pie mid (shade ↔ light). */
-const SHADE_SPAN = 18;
-/** Softer than 40 → markings collapse closer to tobiano mid. */
-const SHADE_SOFT = 55;
+/** Paper / lit markings collapse onto pie mid. */
+const SHADE_SPAN_HI = 10;
+/** Shadows (mane, undersides) keep more form. */
+const SHADE_SPAN_LO = 30;
+const SHADE_SOFT = 50;
 
 export function isPieOverlayLayer(layerId: string): boolean {
   return layerId === 'pie' || layerId === 'pie-foal';
@@ -53,7 +54,7 @@ export function isEyeTissue(r: number, g: number, b: number): boolean {
   // L ceiling sits above lit rosy-white so nostril leather is not graded
   // back to tobiano clay.
   const warm = r - Math.max(g, b);
-  if (warm > 8 && L > 70 && L < 236 && r - Math.min(g, b) > 14) {
+  if (warm > 8 && L > 70 && L < 218 && r - Math.min(g, b) > 14) {
     return true;
   }
   return false;
@@ -77,8 +78,9 @@ export function liftPieWhite(
     return [r, g, b];
   }
 
-  const targetL =
-    PIE_WHITE_L + Math.tanh((L - PIE_WHITE_L) / SHADE_SOFT) * SHADE_SPAN;
+  const delta = L - PIE_WHITE_L;
+  const span = delta >= 0 ? SHADE_SPAN_HI : SHADE_SPAN_LO;
+  const targetL = PIE_WHITE_L + Math.tanh(delta / SHADE_SOFT) * span;
 
   const scale = L > 1e-6 ? targetL / L : 1;
   let nr = r * scale;
@@ -104,7 +106,7 @@ export function liftPieWhite(
 export function coatFormShade(r: number, g: number, b: number): number {
   const dL = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   const t = Math.min(1, Math.max(0, (dL - 16) / 170));
-  return 0.7 + t * 0.38;
+  return 0.78 + t * 0.3;
 }
 
 /**

@@ -4,6 +4,7 @@
  *
  * Usage:
  *   node tools/generate-foal-tobiano-candidates.mjs
+ *   node tools/generate-foal-tobiano-candidates.mjs --retint-hooves
  */
 import { mkdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
@@ -427,27 +428,6 @@ async function loadRaw(file, size) {
     });
 }
 
-function hoofMask(bay, width, height) {
-  const mask = new Float32Array(width * height);
-  const colBot = new Int16Array(width).fill(-1);
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      if (bay[(y * width + x) * 4 + 3] >= 16) colBot[x] = y;
-    }
-  }
-  const hoofH = 11 * (width / SIZE);
-  const minBot = height * 0.905;
-  for (let x = 0; x < width; x++) {
-    const bot = colBot[x];
-    if (bot < minBot) continue;
-    for (let y = Math.max(0, Math.round(bot - hoofH)); y <= bot; y++) {
-      if (bay[(y * width + x) * 4 + 3] < 16) continue;
-      mask[y * width + x] = 1 - smoothstep(hoofH * 0.4, hoofH, bot - y);
-    }
-  }
-  return mask;
-}
-
 /**
  * A tobiano boundary is a couple of hairs wide, not an airbrush: the wide blur
  * that rounds the blobs also has to be pulled back into a narrow band, with the
@@ -510,7 +490,6 @@ function paintOverlay(soft, mane, palomino, bay, morph, width, height) {
   }
   const palForm = blurCoverage(palLuma, width, height, 7);
   const bayForm = blurCoverage(bayLuma, width, height, 7);
-  const hoof = hoofMask(bay, width, height);
   const out = Buffer.alloc(width * height * 4);
   const scale = width / SIZE;
 
@@ -566,17 +545,6 @@ function paintOverlay(soft, mane, palomino, bay, morph, width, height) {
     let r = WHITE[0] * shade;
     let g = WHITE[1] * shade;
     let b = WHITE[2] * shade;
-    const h = hoof[p];
-    if (h > 0.02) {
-      const t = formLight(p, palLuma, bayLuma, palForm, bayForm);
-      const grain = (palLuma[p] - palForm[p]) * 36;
-      const hornR = 206 + t * 42 + grain;
-      const hornG = 158 + t * 52 + grain * 0.85;
-      const hornB = 142 + t * 48 + grain * 0.7;
-      r = r * (1 - h) + hornR * h;
-      g = g * (1 - h) + hornG * h;
-      b = b * (1 - h) + hornB * h;
-    }
     out[i] = clampByte(r);
     out[i + 1] = clampByte(g);
     out[i + 2] = clampByte(b);
@@ -612,7 +580,94 @@ async function compositeOnBay(overlay, bayPath, dest) {
     .toFile(dest);
 }
 
+/**
+ * Strip the rosy hoof tint. Copy sock white from the same column so the
+ * hoof stays in the pie patch, without a pink cap.
+ */
+function retintHoofPixels(data, width, height) {
+  const y0 = Math.floor(height * 0.78);
+  const out = Buffer.from(data);
+  for (let x = 0; x < width; x++) {
+    for (let y = y0; y < height; y++) {
+      const i = (y * width + x) * 4;
+      if (out[i + 3] < 16) continue;
+      const r = out[i];
+      const g = out[i + 1];
+      const b = out[i + 2];
+      const warm = r - Math.max(g, b);
+      const peach = r - b;
+      if (warm < 8 && peach < 14) continue;
+      let sr = WHITE[0];
+      let sg = WHITE[1];
+      let sb = WHITE[2];
+      for (let uy = y - 1; uy >= y0 - 24 && uy >= 0; uy--) {
+        const j = (uy * width + x) * 4;
+        if (out[j + 3] < 40) continue;
+        const ur = out[j];
+        const ug = out[j + 1];
+        const ub = out[j + 2];
+        if (ur - Math.max(ug, ub) < 8 && ur - ub < 14) {
+          sr = ur;
+          sg = ug;
+          sb = ub;
+          break;
+        }
+      }
+      out[i] = sr;
+      out[i + 1] = sg;
+      out[i + 2] = sb;
+    }
+  }
+  return out;
+}
+
+async function retintInstalledHooves() {
+  const files = [
+    path.join(ROOT, 'plugins/horse/layers/pie-foal/tobiano.png'),
+    path.join(ROOT, 'docs/images/horse-base/foal/pie/tobiano-01-classic.png'),
+  ];
+  for (const file of files) {
+    const { data, info } = await sharp(file)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const next = retintHoofPixels(data, info.width, info.height);
+    await sharp(next, {
+      raw: { width: info.width, height: info.height, channels: 4 },
+    })
+      .png({ compressionLevel: 9 })
+      .toFile(file);
+    console.log('retinted hooves', path.relative(ROOT, file));
+  }
+
+  const plugin = path.join(ROOT, 'plugins/horse/layers/pie-foal/tobiano.png');
+  const bayMaster = path.join(
+    ROOT,
+    'docs/images/horse-base/foal/coat-master-bay.png',
+  );
+  const preview = path.join(
+    ROOT,
+    'docs/images/horse-base/foal/pie/tobiano-01-classic-on-bay.png',
+  );
+  await compositeOnBay(plugin, bayMaster, preview);
+  console.log('wrote', path.relative(ROOT, preview));
+
+  const sync = spawnSync(
+    process.execPath,
+    [path.join(ROOT, 'tools/sync-editor-horse-plugin.mjs')],
+    { cwd: ROOT, stdio: 'inherit' },
+  );
+  if (sync.status !== 0) {
+    throw new Error('editor plugin sync failed');
+  }
+}
+
 async function main() {
+  if (process.argv.includes('--retint-hooves')) {
+    await retintInstalledHooves();
+    return;
+  }
+
   const bayMaster = path.join(
     ROOT,
     'docs/images/horse-base/foal/coat-master-bay.png',

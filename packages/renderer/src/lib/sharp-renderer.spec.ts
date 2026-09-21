@@ -1,7 +1,12 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { RenderLayer, RenderRequest } from '@klairox/core';
+import {
+  applyCoatSheen,
+  mixPieOverDest,
+  type RenderLayer,
+  type RenderRequest,
+} from '@klairox/core';
 import sharp from 'sharp';
 import { SharpRenderer } from './sharp-renderer.js';
 
@@ -207,10 +212,22 @@ describe('SharpRenderer', () => {
       layers: [layer(coat), layer(piePath, { layerId: 'pie' })],
     });
 
+    const dest = new Uint8ClampedArray(CANVAS.width * CANVAS.height * 4);
+    const src = new Uint8ClampedArray(dest.length);
+    for (let i = 0; i < dest.length; i += 4) {
+      dest[i + 3] = 255;
+      src[i] = 255;
+      src[i + 1] = 255;
+      src[i + 2] = 255;
+      src[i + 3] = 128;
+    }
+    mixPieOverDest(dest, src);
+    applyCoatSheen(dest, CANVAS);
+
     expect(await readPixel(output, 0, 0)).toEqual({
-      r: 85,
-      g: 83,
-      b: 81,
+      r: dest[0],
+      g: dest[1],
+      b: dest[2],
       a: 255,
     });
   });

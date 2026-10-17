@@ -413,6 +413,64 @@
       ]
     },
     {
+      "id": "markings-lusitano",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat-lusitano"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze (liste)",
+          "asset": "layers/markings/Lusitano/blaze.png"
+        },
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/Lusitano/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/Lusitano/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/Lusitano/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/Lusitano/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/Lusitano/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/Lusitano/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/Lusitano/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/Lusitano/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/Lusitano/crescent.png"
+        }
+      ]
+    },
+    {
       "id": "mane",
       "title": "Mane",
       "order": 40,
@@ -497,7 +555,7 @@
       "id": "foal-hides-adult-overlays",
       "description": "Adult pie, face markings and equipment are authored for the adult silhouette",
       "when": { "body": "foal" },
-      "hide": ["pie", "markings", "equipment"]
+      "hide": ["pie", "markings", "markings-lusitano", "equipment"]
     },
     {
       "id": "standard-hides-foal-pie",
@@ -509,7 +567,7 @@
       "id": "standard-hides-foal-markings",
       "description": "Adult face markings are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["markings-foal"]
+      "hide": ["markings-foal", "markings-lusitano"]
     },
     {
       "id": "pie-hides-markings",

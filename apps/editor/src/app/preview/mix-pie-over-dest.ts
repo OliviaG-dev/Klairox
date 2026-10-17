@@ -16,7 +16,11 @@ export function isPieOverlayLayer(layerId: string): boolean {
 }
 
 export function isMarkingOverlayLayer(layerId: string): boolean {
-  return layerId === 'markings' || layerId === 'markings-foal';
+  return (
+    layerId === 'markings' ||
+    layerId === 'markings-foal' ||
+    layerId === 'markings-lusitano'
+  );
 }
 
 export function isWhiteOverlayLayer(layerId: string): boolean {

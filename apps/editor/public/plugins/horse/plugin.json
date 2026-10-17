@@ -26,6 +26,11 @@
           "id": "foal",
           "title": "Foal",
           "asset": "layers/body/foal.png"
+        },
+        {
+          "id": "lusitano",
+          "title": "Lusitanien",
+          "asset": "layers/body/lusitano.png"
         }
       ]
     },
@@ -153,6 +158,70 @@
           "id": "cream",
           "title": "Cream",
           "asset": "layers/coat-foal/cream.png",
+          "tags": ["light"]
+        }
+      ]
+    },
+    {
+      "id": "coat-lusitano",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat-lusitano/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat-lusitano/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat-lusitano/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat-lusitano/chestnut.png"
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat-lusitano/grey.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "roan",
+          "title": "Roan",
+          "asset": "layers/coat-lusitano/roan.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "palomino",
+          "title": "Palomino",
+          "asset": "layers/coat-lusitano/palomino.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "isabelle",
+          "title": "Isabelle",
+          "asset": "layers/coat-lusitano/isabelle.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "cream",
+          "title": "Cream",
+          "asset": "layers/coat-lusitano/cream.png",
           "tags": ["light"]
         }
       ]
@@ -386,22 +455,43 @@
       "hide": ["body"]
     },
     {
+      "id": "body-not-painted-lusitano",
+      "description": "Lusitano coats carry the full silhouette; the build axis is selection-only",
+      "when": { "body": "lusitano" },
+      "hide": ["body"]
+    },
+    {
+      "id": "lusitano-hides-other-coats",
+      "description": "Lusitano coats are used for the Lusitano build",
+      "when": { "body": "lusitano" },
+      "hide": [
+        "coat",
+        "coat-foal",
+        "pie",
+        "pie-foal",
+        "markings",
+        "markings-foal",
+        "mane",
+        "equipment"
+      ]
+    },
+    {
       "id": "mane-not-painted",
       "description": "Coat masters still include mane and tail; the mane axis is selection-only until hair is split",
-      "when": { "body": ["standard", "foal"] },
+      "when": { "body": ["standard", "foal", "lusitano"] },
       "hide": ["mane"]
     },
     {
       "id": "standard-hides-foal-coat",
       "description": "Adult coats are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["coat-foal"]
+      "hide": ["coat-foal", "coat-lusitano"]
     },
     {
       "id": "foal-hides-standard-coat",
       "description": "Foal coats are used for the foal build",
       "when": { "body": "foal" },
-      "hide": ["coat"]
+      "hide": ["coat", "coat-lusitano"]
     },
     {
       "id": "foal-hides-adult-overlays",

@@ -464,7 +464,16 @@
       "id": "lusitano-hides-other-coats",
       "description": "Lusitano coats are used for the Lusitano build",
       "when": { "body": "lusitano" },
-      "hide": ["coat", "coat-foal", "pie", "pie-foal", "markings", "markings-foal", "mane", "equipment"]
+      "hide": [
+        "coat",
+        "coat-foal",
+        "pie",
+        "pie-foal",
+        "markings",
+        "markings-foal",
+        "mane",
+        "equipment"
+      ]
     },
     {
       "id": "mane-not-painted",

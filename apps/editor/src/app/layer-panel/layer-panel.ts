@@ -17,9 +17,7 @@ export function visiblePanelLayers<T extends PanelLayer>(
     }
 
     const title = layer.title ?? layer.id;
-    const twins = layers.filter(
-      (other) => (other.title ?? other.id) === title,
-    );
+    const twins = layers.filter((other) => (other.title ?? other.id) === title);
     if (twins.some((other) => !isHidden(other.id))) {
       return false;
     }

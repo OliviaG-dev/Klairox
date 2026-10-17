@@ -1,6 +1,33 @@
 import { Component, computed, inject } from '@angular/core';
 import { EditorSession } from '../editor-session';
 
+interface PanelLayer {
+  readonly id: string;
+  readonly title?: string;
+}
+
+/** Drop a hidden layer when another layer with the same title is shown, or when an earlier hidden twin already represents the group. */
+export function visiblePanelLayers<T extends PanelLayer>(
+  layers: readonly T[],
+  isHidden: (layerId: string) => boolean,
+): T[] {
+  return layers.filter((layer) => {
+    if (!isHidden(layer.id)) {
+      return true;
+    }
+
+    const title = layer.title ?? layer.id;
+    const twins = layers.filter(
+      (other) => (other.title ?? other.id) === title,
+    );
+    if (twins.some((other) => !isHidden(other.id))) {
+      return false;
+    }
+
+    return twins[0] === layer;
+  });
+}
+
 @Component({
   selector: 'kx-layer-panel',
   templateUrl: './layer-panel.html',
@@ -15,20 +42,8 @@ export class LayerPanel {
       return [];
     }
 
-    const layers = plugin.manifest.layers;
-    return layers.filter((layer) => {
-      if (!this.session.isHidden(layer.id)) {
-        return true;
-      }
-
-      const title = layer.title ?? layer.id;
-      const hasVisibleTwin = layers.some(
-        (other) =>
-          other.id !== layer.id &&
-          (other.title ?? other.id) === title &&
-          !this.session.isHidden(other.id),
-      );
-      return !hasVisibleTwin;
-    });
+    return visiblePanelLayers(plugin.manifest.layers, (layerId) =>
+      this.session.isHidden(layerId),
+    );
   });
 }

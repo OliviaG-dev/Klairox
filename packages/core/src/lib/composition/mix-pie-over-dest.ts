@@ -23,7 +23,11 @@ export function isPieOverlayLayer(layerId: string): boolean {
 }
 
 export function isMarkingOverlayLayer(layerId: string): boolean {
-  return layerId === 'markings' || layerId === 'markings-foal';
+  return (
+    layerId === 'markings' ||
+    layerId === 'markings-foal' ||
+    layerId === 'markings-lusitano'
+  );
 }
 
 /** Pie and face markings share one white mix so tobiano patches match a blaze. */

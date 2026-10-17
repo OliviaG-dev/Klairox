@@ -126,7 +126,9 @@ function faceOf(right, x, y) {
 
 function band(face, t0, t1, half, feather = 1.6) {
   if (!face) return 0;
-  const along = smoothstep(t0 - 0.02, t0 + 0.015, face.t) * (1 - smoothstep(t1 - 0.015, t1 + 0.025, face.t));
+  const along =
+    smoothstep(t0 - 0.02, t0 + 0.015, face.t) *
+    (1 - smoothstep(t1 - 0.015, t1 + 0.025, face.t));
   const across = 1 - smoothstep(half - feather, half + 0.4, Math.abs(face.s));
   return along * across;
 }
@@ -159,15 +161,21 @@ function blazeCoverage(_center, x, y) {
   const t = clamp((y - 92) / (176 - 92));
   const half = 9.2 * (1 - t) + 3.3 * t;
   const swing = 4.2 * (1 - t * 0.45);
-  const left = -(half + (fbm(t * 4.2, 1.1) - 0.5) * swing + (fbm(t * 11, 2.4) - 0.5) * 1.6);
-  const right = half + (fbm(t * 3.6, 6.3) - 0.5) * swing + (fbm(t * 10, 8.2) - 0.5) * 1.6;
+  const left = -(
+    half +
+    (fbm(t * 4.2, 1.1) - 0.5) * swing +
+    (fbm(t * 11, 2.4) - 0.5) * 1.6
+  );
+  const right =
+    half + (fbm(t * 3.6, 6.3) - 0.5) * swing + (fbm(t * 10, 8.2) - 0.5) * 1.6;
   const s = x - blazeX(y);
-  const neck = y >= 104 && y <= 176
-    ? Math.min(
-        smoothstep(left - 1.6, left + 1.2, s),
-        1 - smoothstep(right - 1.2, right + 1.6, s),
-      )
-    : 0;
+  const neck =
+    y >= 104 && y <= 176
+      ? Math.min(
+          smoothstep(left - 1.6, left + 1.2, s),
+          1 - smoothstep(right - 1.2, right + 1.6, s),
+        )
+      : 0;
   const lip = 1 - smoothstep(0.88, 1, t);
   const fringe = (fbm(x * 0.35, y * 0.28) - 0.5) * 0.28;
   const cap = Math.hypot((x - blazeX(104)) / 12.5, (y - 104) / 12) + fringe;
@@ -190,11 +198,17 @@ function thinBlazeCoverage(x, y) {
       ? Math.min(
           smoothstep(left - 1.4, left + 1, s),
           1 - smoothstep(right - 1, right + 1.4, s),
-        ) * (1 - smoothstep(0.86, 1, t))
+        ) *
+        (1 - smoothstep(0.86, 1, t))
       : 0;
-  const topHalf = 1.25 + 4.2 * (0.55 * (0.5 + 0.5 * Math.sin(1.15)) + 0.45 * fbm(0, 5.5));
+  const topHalf =
+    1.25 + 4.2 * (0.55 * (0.5 + 0.5 * Math.sin(1.15)) + 0.45 * fbm(0, 5.5));
   const fringe = (fbm(x * 0.42, y * 0.33) - 0.5) * 0.22;
-  const cap = Math.hypot((x - blazeX(100)) / (topHalf * 1.05), (y - 100) / (topHalf * 1.55)) + fringe;
+  const cap =
+    Math.hypot(
+      (x - blazeX(100)) / (topHalf * 1.05),
+      (y - 100) / (topHalf * 1.55),
+    ) + fringe;
   const dome = 1 - smoothstep(0.58, 1.04, cap);
   return Math.max(body, dome);
 }
@@ -265,7 +279,8 @@ function diamondCoverage(x, y) {
   const dx = x - cx;
   const dy = y - cy;
   const ang = Math.atan2(dy, dx);
-  const wobble = (fbm(Math.cos(ang) * 1.6 + 2, Math.sin(ang) * 1.6 + 5) - 0.5) * 0.16;
+  const wobble =
+    (fbm(Math.cos(ang) * 1.6 + 2, Math.sin(ang) * 1.6 + 5) - 0.5) * 0.16;
   const d = Math.abs(dx) / 7.4 + Math.abs(dy) / 10.2 + wobble;
   return 1 - smoothstep(0.82, 1.06, d);
 }
@@ -278,7 +293,8 @@ function heartCoverage(x, y) {
   const dx = x - cx;
   const dy = y - cy;
   const ang = Math.atan2(dy, dx);
-  const wobble = (fbm(Math.cos(ang) * 1.5 + 1.2, Math.sin(ang) * 1.5 + 4) - 0.5) * 0.14;
+  const wobble =
+    (fbm(Math.cos(ang) * 1.5 + 1.2, Math.sin(ang) * 1.5 + 4) - 0.5) * 0.14;
   const left = Math.hypot((dx + 3.2) / 4.4, (dy + 2.4) / 4) + wobble;
   const right = Math.hypot((dx - 4) / 5.1, (dy + 1.6) / 4.5) + wobble * 0.6;
   const lobes = Math.max(
@@ -302,9 +318,7 @@ function snipCoverage(x, y) {
   if (dy < -8 || dy > 7) return 0;
   const u = (dy + 8) / 15;
   const half =
-    2.2 +
-    4.8 * fbm(u * 2.4, 3.3) +
-    1.6 * Math.sin(u * Math.PI * 1.7);
+    2.2 + 4.8 * fbm(u * 2.4, 3.3) + 1.6 * Math.sin(u * Math.PI * 1.7);
   const left = -(half * (0.65 + 0.5 * fbm(u * 3.1, 1.4)));
   const right = half * (0.55 + 0.6 * fbm(u * 2.7, 8.2));
   const across = Math.min(
@@ -313,7 +327,8 @@ function snipCoverage(x, y) {
   );
   const end = (fbm(dx * 0.4, 5.5) - 0.5) * 3.5;
   const along =
-    smoothstep(-7.6, -5.2, dy + end) * (1 - smoothstep(4.6, 7.2, dy - end * 0.6));
+    smoothstep(-7.6, -5.2, dy + end) *
+    (1 - smoothstep(4.6, 7.2, dy - end * 0.6));
   return across * along;
 }
 
@@ -325,7 +340,8 @@ function starSnipCoverage(x, y) {
     const dx = x - cx;
     const dy = y - cy;
     const ang = Math.atan2(dy, dx);
-    const wobble = (fbm(Math.cos(ang) * 1.4 + 2, Math.sin(ang) * 1.4 + 5) - 0.5) * 0.22;
+    const wobble =
+      (fbm(Math.cos(ang) * 1.4 + 2, Math.sin(ang) * 1.4 + 5) - 0.5) * 0.22;
     const d = Math.hypot(dx / 7.2, dy / 5.6) + wobble;
     top = 1 - smoothstep(0.7, 1.05, d);
   }
@@ -362,11 +378,12 @@ function crescentCoverage(x, y) {
   const dx = x - cx;
   const dy = y - cy;
   const ang = Math.atan2(dy, dx);
-  const wobble = (fbm(Math.cos(ang) * 1.3 + 3, Math.sin(ang) * 1.3 + 2) - 0.5) * 0.1;
+  const wobble =
+    (fbm(Math.cos(ang) * 1.3 + 3, Math.sin(ang) * 1.3 + 2) - 0.5) * 0.1;
   const outer = Math.hypot(dx / 9, dy / 7.4) + wobble;
   const inner = Math.hypot((dx - 3.6) / 6.8, (dy - 0.6) / 5.8);
   return clamp(
-    (1 - smoothstep(0.76, 1.02, outer)) - (1 - smoothstep(0.62, 0.96, inner)),
+    1 - smoothstep(0.76, 1.02, outer) - (1 - smoothstep(0.62, 0.96, inner)),
   );
 }
 
@@ -437,7 +454,18 @@ function paint(id, bay, right, center, width, height) {
                             ? crescentCoverage(x, y)
                             : coverage(id, face);
       if (cov <= 0.02) continue;
-      if (id !== 'blaze' && id !== 'thin-blaze' && id !== 'stripe' && id !== 'star' && id !== 'diamond' && id !== 'heart' && id !== 'snip' && id !== 'star-snip' && id !== 'bald' && id !== 'crescent') {
+      if (
+        id !== 'blaze' &&
+        id !== 'thin-blaze' &&
+        id !== 'stripe' &&
+        id !== 'star' &&
+        id !== 'diamond' &&
+        id !== 'heart' &&
+        id !== 'snip' &&
+        id !== 'star-snip' &&
+        id !== 'bald' &&
+        id !== 'crescent'
+      ) {
         const n = fbm(x * 0.35, y * 0.35);
         cov *= 0.82 + 0.18 * n;
       }
@@ -446,11 +474,19 @@ function paint(id, bay, right, center, width, height) {
 
       const L = 0.2126 * bay[i] + 0.7152 * bay[i + 1] + 0.0722 * bay[i + 2];
       const form =
-        id === 'blaze' || id === 'thin-blaze' || id === 'stripe' || id === 'star' || id === 'diamond' || id === 'heart' || id === 'snip' || id === 'star-snip' || id === 'bald' || id === 'crescent'
+        id === 'blaze' ||
+        id === 'thin-blaze' ||
+        id === 'stripe' ||
+        id === 'star' ||
+        id === 'diamond' ||
+        id === 'heart' ||
+        id === 'snip' ||
+        id === 'star-snip' ||
+        id === 'bald' ||
+        id === 'crescent'
           ? clamp(0.74 + (L - 50) / 240, 0.62, 1.02)
           : clamp(0.62 + (L - 35) / 150, 0.58, 1.06);
-      const side =
-        id === 'blaze' ? clamp((x - blazeX(y)) / 8, -1, 1) : 0;
+      const side = id === 'blaze' ? clamp((x - blazeX(y)) / 8, -1, 1) : 0;
       let r = 244 * form * (1 + side * 0.04);
       let g = 238 * form * (1 + side * 0.03);
       let b = 230 * form * (1 - side * 0.02);
@@ -460,9 +496,17 @@ function paint(id, bay, right, center, width, height) {
             (0.35 + 0.65 * smoothstep(-4, 7, x - blazeX(y))) *
             (0.45 + 0.55 * fbm(x * 0.22, y * 0.28))
           : face
-            ? smoothstep(0.78, 0.92, face.t) * (0.55 + 0.45 * smoothstep(0, 6, face.s + 4))
+            ? smoothstep(0.78, 0.92, face.t) *
+              (0.55 + 0.45 * smoothstep(0, 6, face.s + 4))
             : 0;
-      if (id === 'blaze' || id === 'bald' || id === 'thin-blaze' || id === 'stripe' || id === 'snip' || id === 'star-snip') {
+      if (
+        id === 'blaze' ||
+        id === 'bald' ||
+        id === 'thin-blaze' ||
+        id === 'stripe' ||
+        id === 'snip' ||
+        id === 'star-snip'
+      ) {
         r = r * (1 - pink * 0.55) + 214 * pink;
         g = g * (1 - pink * 0.7) + 156 * pink;
         b = b * (1 - pink * 0.7) + 148 * pink;
@@ -517,13 +561,18 @@ async function composite(bay, overlay, width, height) {
     const a = overlay[i + 3] / 255;
     if (a <= 0) continue;
     for (let c = 0; c < 3; c++) {
-      preview[i + c] = Math.round(preview[i + c] * (1 - a) + overlay[i + c] * a);
+      preview[i + c] = Math.round(
+        preview[i + c] * (1 - a) + overlay[i + c] * a,
+      );
     }
   }
   return preview;
 }
 
-const bayImg = await sharp(path.join(ROOT, BAY)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const bayImg = await sharp(path.join(ROOT, BAY))
+  .ensureAlpha()
+  .raw()
+  .toBuffer({ resolveWithObject: true });
 const { data, info } = bayImg;
 const right = buildFrame(data, info.width);
 const center = smoothCenter(right);
@@ -539,16 +588,21 @@ for (const id of IDS) {
   let overlay = paint(id, data, right, center, info.width, info.height);
   const preview = await composite(data, overlay, info.width, info.height);
   for (const dir of OUTS) {
-    await sharp(overlay, { raw: { width: info.width, height: info.height, channels: 4 } })
+    await sharp(overlay, {
+      raw: { width: info.width, height: info.height, channels: 4 },
+    })
       .png({ compressionLevel: 9 })
       .toFile(path.join(ROOT, dir, `${id}.png`));
-    await sharp(preview, { raw: { width: info.width, height: info.height, channels: 4 } })
+    await sharp(preview, {
+      raw: { width: info.width, height: info.height, channels: 4 },
+    })
       .extract({ left: 300, top: 40, width: 160, height: 180 })
       .resize(320, 360, { kernel: 'nearest' })
       .png()
       .toFile(path.join(ROOT, dir, '_preview', `${id}-on-bay.png`));
   }
   let area = 0;
-  for (let p = 0; p < info.width * info.height; p++) if (overlay[p * 4 + 3] > 40) area++;
+  for (let p = 0; p < info.width * info.height; p++)
+    if (overlay[p * 4 + 3] > 40) area++;
   console.log(id, 'area', area);
 }

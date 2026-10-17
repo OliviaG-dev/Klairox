@@ -12,10 +12,16 @@ const SRC = path.join(ROOT, 'docs/images/horse-source/Lusitano/coats/roan.jpg');
 const BAY = path.join(ROOT, 'plugins/horse/layers/coat-lusitano/bay.png');
 const OUTS = [
   path.join(ROOT, 'plugins/horse/layers/coat-lusitano/roan.png'),
-  path.join(ROOT, 'apps/editor/public/plugins/horse/layers/coat-lusitano/roan.png'),
+  path.join(
+    ROOT,
+    'apps/editor/public/plugins/horse/layers/coat-lusitano/roan.png',
+  ),
 ];
 
-const { data: bay, info } = await sharp(BAY).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const { data: bay, info } = await sharp(BAY)
+  .ensureAlpha()
+  .raw()
+  .toBuffer({ resolveWithObject: true });
 const { width: w, height: h } = info;
 
 const src = await sharp(SRC).resize(w, h).ensureAlpha().raw().toBuffer();
@@ -42,6 +48,8 @@ for (let i = 0; i < out.length; i += 4) {
 }
 
 for (const file of OUTS) {
-  await sharp(out, { raw: { width: w, height: h, channels: 4 } }).png().toFile(file);
+  await sharp(out, { raw: { width: w, height: h, channels: 4 } })
+    .png()
+    .toFile(file);
   console.log('wrote', path.relative(ROOT, file));
 }

@@ -57,7 +57,9 @@ describe('loadPlugin', () => {
     expect(plugin.manifest.constraints).toHaveLength(13);
     expect(plugin.index.layers.get('markings')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('markings-foal')?.options).toHaveLength(10);
-    expect(plugin.index.layers.get('markings-lusitano')?.options).toHaveLength(10);
+    expect(plugin.index.layers.get('markings-lusitano')?.options).toHaveLength(
+      10,
+    );
     expect(plugin.index.layers.get('coat')?.blendMode).toBe('normal');
     expect(plugin.index.layers.get('body')?.options.map((o) => o.id)).toEqual([
       'standard',

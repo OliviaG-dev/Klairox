@@ -280,18 +280,6 @@
           "title": "Isabelle",
           "asset": "layers/coat-arabian/isabelle.png",
           "tags": ["light"]
-        },
-        {
-          "id": "palomino",
-          "title": "Palomino",
-          "asset": "layers/coat-arabian/palomino.png",
-          "tags": ["light"]
-        },
-        {
-          "id": "cream",
-          "title": "Cream",
-          "asset": "layers/coat-arabian/cream.png",
-          "tags": ["light"]
         }
       ]
     },
@@ -540,6 +528,64 @@
       ]
     },
     {
+      "id": "markings-arabian",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat-arabian"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze (liste)",
+          "asset": "layers/markings/Arabian/blaze.png"
+        },
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/Arabian/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/Arabian/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/Arabian/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/Arabian/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/Arabian/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/Arabian/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/Arabian/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/Arabian/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/Arabian/crescent.png"
+        }
+      ]
+    },
+    {
       "id": "mane",
       "title": "Mane",
       "order": 40,
@@ -604,6 +650,7 @@
         "pie-foal",
         "markings",
         "markings-foal",
+        "markings-arabian",
         "mane",
         "equipment",
         "coat-arabian"
@@ -648,7 +695,7 @@
       "id": "foal-hides-adult-overlays",
       "description": "Adult pie, face markings and equipment are authored for the adult silhouette",
       "when": { "body": "foal" },
-      "hide": ["pie", "markings", "markings-lusitano", "equipment"]
+      "hide": ["pie", "markings", "markings-lusitano", "markings-arabian", "equipment"]
     },
     {
       "id": "standard-hides-foal-pie",
@@ -660,7 +707,7 @@
       "id": "standard-hides-foal-markings",
       "description": "Adult face markings are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["markings-foal", "markings-lusitano"]
+      "hide": ["markings-foal", "markings-lusitano", "markings-arabian"]
     },
     {
       "id": "pie-hides-markings",

@@ -110,6 +110,18 @@ function buildJobs() {
     }
   }
 
+  // Lusitano coats already include mane and tail. There is no pie overlay.
+  for (const coat of COATS) {
+    for (const marking of MARKING_CHOICES) {
+      const markId = marking ?? 'none';
+      const name = `stalloria-lusitano-${coat}-pie-none-mark-${markId}`;
+      /** @type {Record<string, string>} */
+      const selection = { body: 'lusitano', 'coat-lusitano': coat };
+      if (marking) selection['markings-lusitano'] = marking;
+      jobs.push({ name, selection });
+    }
+  }
+
   return jobs;
 }
 
@@ -999,7 +1011,7 @@ async function main() {
   console.log(`  planned      ${jobs.length}`);
   console.log(`  concurrency  ${CONCURRENCY}`);
   console.log(
-    `  axes         body(2) × coat(${COATS.length}) × pie(none|tobiano) × markings(none+${MARKINGS.length})`,
+    `  axes         standard|foal × coat(${COATS.length}) × pie(none|tobiano) × markings(none+${MARKINGS.length}); lusitano × coat × pie(none) × markings`,
   );
 
   if (dryRun) {
@@ -1054,7 +1066,7 @@ async function main() {
     skipped,
     failed,
     matrix: {
-      body: ['standard', 'foal'],
+      body: ['standard', 'foal', 'lusitano'],
       coat: COATS,
       pie: ['none', 'tobiano'],
       markings: ['none', ...MARKINGS],

@@ -23,6 +23,7 @@ describe('mixPieOverDest', () => {
     expect(isMarkingOverlayLayer('markings')).toBe(true);
     expect(isMarkingOverlayLayer('markings-foal')).toBe(true);
     expect(isMarkingOverlayLayer('markings-lusitano')).toBe(true);
+    expect(isMarkingOverlayLayer('markings-arabian')).toBe(true);
     expect(isWhiteOverlayLayer('pie')).toBe(true);
     expect(isWhiteOverlayLayer('markings')).toBe(true);
     expect(isWhiteOverlayLayer('coat')).toBe(false);

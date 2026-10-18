@@ -26,7 +26,8 @@ export function isMarkingOverlayLayer(layerId: string): boolean {
   return (
     layerId === 'markings' ||
     layerId === 'markings-foal' ||
-    layerId === 'markings-lusitano'
+    layerId === 'markings-lusitano' ||
+    layerId === 'markings-arabian'
   );
 }
 

@@ -1,10 +1,10 @@
 ﻿/**
- * Recolors the Arabian bay from the Lusitano coat masters.
- * Lightness of the Arabian is kept so the shading stays; chroma comes
- * from the reference coat. Palomino and cream are not generated.
- *
- *   node tools/generate-arabian-coats.mjs
+ * Recolors the Arabian bay cutout into the other coats.
+ * Lightness of the Arabian is kept so the shading stays.
+ * Pass coat names to write only those files:
+ *   node tools/generate-arabian-coats.mjs palomino cream black roan grey
  */
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -13,6 +13,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'plugins/horse/layers/coat-arabian/bay.png');
 const REF_DIR = path.join(ROOT, 'plugins/horse/layers/coat-lusitano');
 const OUT_DIR = path.join(ROOT, 'plugins/horse/layers/coat-arabian');
+const PUBLIC_DIR = path.join(
+  ROOT,
+  'apps/editor/public/plugins/horse/layers/coat-arabian',
+);
+const ONLY = new Set(process.argv.slice(2));
+
+function selected(name) {
+  return ONLY.size === 0 || ONLY.has(name);
+}
 
 const XN = 0.95047;
 const YN = 1;
@@ -122,7 +131,8 @@ const bay = await loadRaw(SRC);
 const body = (r, g, b) => !isPoint(r, g, b);
 const srcBody = stats(bay.data, body);
 
-function writeCoat(name, paint) {
+async function writeCoat(name, paint) {
+  if (!selected(name)) return;
   const out = Buffer.alloc(bay.data.length);
   for (let i = 0, p = 0; i < bay.data.length; i += 4, p++) {
     const a = bay.data[i + 3];
@@ -135,18 +145,21 @@ function writeCoat(name, paint) {
     out[i + 1] = rgb[1];
     out[i + 2] = rgb[2];
   }
-  return sharp(out, {
+  const file = `${name}.png`;
+  await sharp(out, {
     raw: { width: bay.width, height: bay.height, channels: 4 },
   })
     .png()
-    .toFile(path.join(OUT_DIR, `${name}.png`));
+    .toFile(path.join(OUT_DIR, file));
+  fs.copyFileSync(path.join(OUT_DIR, file), path.join(PUBLIC_DIR, file));
+  console.log('wrote', name);
 }
 
 function clampByte(n) {
   return Math.max(0, Math.min(255, Math.round(n)));
 }
 
-const blackPx = await writeCoat('black', (r, g, b) => {
+await writeCoat('black', (r, g, b) => {
   const y = lum(r, g, b);
   const t = Math.min(1, y / 150);
   const base = 4 + Math.pow(t, 1.05) * 24;
@@ -154,7 +167,6 @@ const blackPx = await writeCoat('black', (r, g, b) => {
   const tone = base + spec * 78;
   return [clampByte(tone), clampByte(tone * 0.98), clampByte(tone * 1.03)];
 });
-console.log('wrote black', blackPx);
 
 const refChestnut = await loadRaw(
   path.join(ROOT, 'plugins/horse/layers/coat-lusitano/chestnut.png'),
@@ -212,10 +224,13 @@ await writeCoat('chestnut', (r, g, b, x, y) => {
 });
 
 await writeCoat('grey', (r, g, b) => {
-  if (Math.max(r, g, b) < 22) return [r, g, b];
   const y = lum(r, g, b);
-  const lifted = 168 + (y - 90) * 0.55;
-  return [r, g, b].map((c) => clampByte(c * 0.12 + lifted * 0.88));
+  if (y < 30) {
+    const tone = 46 + y * 0.45;
+    return [clampByte(tone), clampByte(tone + 1), clampByte(tone + 3)];
+  }
+  const lifted = 158 + (y - 80) * 0.5;
+  return [r, g, b].map((c) => clampByte(c * 0.1 + lifted * 0.9));
 });
 
 await writeCoat('roan', (r, g, b, x, y) => {
@@ -229,6 +244,49 @@ await writeCoat('roan', (r, g, b, x, y) => {
   return [r, g, b];
 });
 
+function isFlaxenHair(x, y, r, g, b) {
+  const pix = lum(r, g, b);
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  if (pix > 20 || chroma > 12 || y > 680) return false;
+  return (x < 480 && y < 560) || (x > 800 && y < 680);
+}
+
+await writeCoat('palomino', (r, g, b, x, y) => {
+  const pix = lum(r, g, b);
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const hoof = y > 910 && pix > 90 && chroma < 55;
+  if (hoof) return [214, 168, 112];
+  if (isFlaxenHair(x, y, r, g, b)) {
+    const tone = 186 + pix;
+    return [clampByte(tone + 10), clampByte(tone - 8), clampByte(tone - 36)];
+  }
+  const t = Math.min(1, Math.pow(pix / 175, 0.92));
+  return [
+    clampByte(36 + t * 196),
+    clampByte(18 + t * 148),
+    clampByte(8 + t * 78),
+  ];
+});
+
+await writeCoat('cream', (r, g, b, x, y) => {
+  const pix = lum(r, g, b);
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const hoof = y > 910 && pix > 80 && chroma < 70;
+  if (hoof) return [228, 196, 160];
+  const eye = x > 242 && x < 286 && y > 152 && y < 180 && pix < 40;
+  if (eye) return [92, 108, 132];
+  if (isFlaxenHair(x, y, r, g, b)) {
+    const tone = 228 + pix * 0.4;
+    return [clampByte(tone), clampByte(tone - 4), clampByte(tone - 14)];
+  }
+  const t = Math.min(1, Math.pow(pix / 170, 0.85));
+  return [
+    clampByte(176 + t * 70),
+    clampByte(150 + t * 78),
+    clampByte(118 + t * 80),
+  ];
+});
+
 await writeCoat('isabelle', (r, g, b) => {
   if (isPoint(r, g, b)) return [r, g, b];
   return [
@@ -238,24 +296,17 @@ await writeCoat('isabelle', (r, g, b) => {
   ];
 });
 
-const mixed = Buffer.alloc(bay.data.length);
-for (let i = 0; i < bay.data.length; i += 4) {
-  mixed[i + 3] = bay.data[i + 3];
-  if (bay.data[i + 3] < 8) continue;
-  const r = bay.data[i];
-  const g = bay.data[i + 1];
-  const b = bay.data[i + 2];
-  const y = lum(r, g, b);
-  const shine = Math.min(1, Math.max(0, (y - 70) / 140));
-  const k = 0.16 + shine * shine * 0.28;
-  const bayShare = Math.min(0.72, Math.max(0.08, (y - 18) / 90));
-  mixed[i] = clampByte(r * k * (1 - bayShare) + r * bayShare);
-  mixed[i + 1] = clampByte(g * k * (1 - bayShare) + g * bayShare);
-  mixed[i + 2] = clampByte(b * k * (1 - bayShare) + b * bayShare);
-}
-await sharp(mixed, {
-  raw: { width: bay.width, height: bay.height, channels: 4 },
-})
-  .png()
-  .toFile(path.join(OUT_DIR, 'bay-brun.png'));
-console.log('wrote bay-brun');
+await writeCoat('bay-brun', (r, g, b, x, y) => {
+  const pix = lum(r, g, b);
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const hoof = y > 910 && pix > 90 && chroma < 55;
+  if (hoof) return [r, g, b];
+  if (pix < 26 && chroma < 16) return [r, g, b];
+  const t = Math.min(1, pix / 175);
+  const shade = t * t;
+  return [
+    clampByte(14 + shade * 96 + Math.max(0, r - pix) * 0.2),
+    clampByte(8 + shade * 46),
+    clampByte(6 + shade * 28),
+  ];
+});

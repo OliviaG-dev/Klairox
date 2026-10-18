@@ -31,6 +31,11 @@
           "id": "lusitano",
           "title": "Lusitanien",
           "asset": "layers/body/lusitano.png"
+        },
+        {
+          "id": "arabian",
+          "title": "Arabe",
+          "asset": "layers/body/arabian.png"
         }
       ]
     },
@@ -222,6 +227,70 @@
           "id": "cream",
           "title": "Cream",
           "asset": "layers/coat-lusitano/cream.png",
+          "tags": ["light"]
+        }
+      ]
+    },
+    {
+      "id": "coat-arabian",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat-arabian/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat-arabian/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat-arabian/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat-arabian/chestnut.png"
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat-arabian/grey.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "roan",
+          "title": "Roan",
+          "asset": "layers/coat-arabian/roan.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "isabelle",
+          "title": "Isabelle",
+          "asset": "layers/coat-arabian/isabelle.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "palomino",
+          "title": "Palomino",
+          "asset": "layers/coat-arabian/palomino.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "cream",
+          "title": "Cream",
+          "asset": "layers/coat-arabian/cream.png",
           "tags": ["light"]
         }
       ]
@@ -519,6 +588,12 @@
       "hide": ["body"]
     },
     {
+      "id": "body-not-painted-arabian",
+      "description": "Arabian coats carry the full silhouette; the build axis is selection-only",
+      "when": { "body": "arabian" },
+      "hide": ["body"]
+    },
+    {
       "id": "lusitano-hides-other-coats",
       "description": "Lusitano coats are used for the Lusitano build",
       "when": { "body": "lusitano" },
@@ -530,26 +605,44 @@
         "markings",
         "markings-foal",
         "mane",
+        "equipment",
+        "coat-arabian"
+      ]
+    },
+    {
+      "id": "arabian-hides-other-coats",
+      "description": "Arabian coats are used for the Arabian build",
+      "when": { "body": "arabian" },
+      "hide": [
+        "coat",
+        "coat-foal",
+        "coat-lusitano",
+        "pie",
+        "pie-foal",
+        "markings",
+        "markings-foal",
+        "markings-lusitano",
+        "mane",
         "equipment"
       ]
     },
     {
       "id": "mane-not-painted",
       "description": "Coat masters still include mane and tail; the mane axis is selection-only until hair is split",
-      "when": { "body": ["standard", "foal", "lusitano"] },
+      "when": { "body": ["standard", "foal", "lusitano", "arabian"] },
       "hide": ["mane"]
     },
     {
       "id": "standard-hides-foal-coat",
       "description": "Adult coats are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["coat-foal", "coat-lusitano"]
+      "hide": ["coat-foal", "coat-lusitano", "coat-arabian"]
     },
     {
       "id": "foal-hides-standard-coat",
       "description": "Foal coats are used for the foal build",
       "when": { "body": "foal" },
-      "hide": ["coat", "coat-lusitano"]
+      "hide": ["coat", "coat-lusitano", "coat-arabian"]
     },
     {
       "id": "foal-hides-adult-overlays",

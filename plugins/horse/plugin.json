@@ -695,7 +695,13 @@
       "id": "foal-hides-adult-overlays",
       "description": "Adult pie, face markings and equipment are authored for the adult silhouette",
       "when": { "body": "foal" },
-      "hide": ["pie", "markings", "markings-lusitano", "markings-arabian", "equipment"]
+      "hide": [
+        "pie",
+        "markings",
+        "markings-lusitano",
+        "markings-arabian",
+        "equipment"
+      ]
     },
     {
       "id": "standard-hides-foal-pie",

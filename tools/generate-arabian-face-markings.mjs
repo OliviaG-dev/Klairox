@@ -310,7 +310,8 @@ function baldCoverage(x, y) {
   const s = cx - x;
   const notch = Math.exp(-(((t - 0.62) / 0.16) ** 2)) * 18;
   const neck = -(12 + 18 * t + (fbm(t * 2.6, 1.7) - 0.5) * 4.6) + notch;
-  const nose = 14 + 4.6 * Math.sin(t * Math.PI) + (fbm(t * 3.1, 6.4) - 0.5) * 3.6;
+  const nose =
+    14 + 4.6 * Math.sin(t * Math.PI) + (fbm(t * 3.1, 6.4) - 0.5) * 3.6;
   const across = Math.min(
     smoothstep(neck - 11, neck + 8, s),
     1 - smoothstep(nose - 3.4, nose + 5, s),
@@ -382,8 +383,7 @@ function paint(id, bay, width, height) {
 
       const L = 0.2126 * bay[i] + 0.7152 * bay[i + 1] + 0.0722 * bay[i + 2];
       const form = clamp(0.74 + (L - 50) / 240, 0.62, 1.02);
-      const side =
-        id === 'blaze' ? clamp((blazeX(y) - x) / 12, -1, 1) : 0;
+      const side = id === 'blaze' ? clamp((blazeX(y) - x) / 12, -1, 1) : 0;
       let r = 244 * form * (1 + side * 0.04);
       let g = 238 * form * (1 + side * 0.03);
       let b = 230 * form * (1 - side * 0.02);

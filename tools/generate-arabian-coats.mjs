@@ -130,14 +130,7 @@ function writeCoat(name, paint) {
     if (a < 8) continue;
     const x = p % bay.width;
     const y = Math.floor(p / bay.width);
-    const rgb = paint(
-      bay.data[i],
-      bay.data[i + 1],
-      bay.data[i + 2],
-      x,
-      y,
-      i,
-    );
+    const rgb = paint(bay.data[i], bay.data[i + 1], bay.data[i + 2], x, y, i);
     out[i] = rgb[0];
     out[i + 1] = rgb[1];
     out[i + 2] = rgb[2];
@@ -188,7 +181,14 @@ await writeCoat('chestnut', (r, g, b, x, y) => {
   const pix = lum(r, g, b);
   const chroma = Math.max(r, g, b) - Math.min(r, g, b);
   const hoof = y > 910 && pix > 90 && chroma < 55;
-  const nose = x > 140 && x < 230 && y > 240 && y < 340 && chroma < 28 && pix > 40 && pix < 160;
+  const nose =
+    x > 140 &&
+    x < 230 &&
+    y > 240 &&
+    y < 340 &&
+    chroma < 28 &&
+    pix > 40 &&
+    pix < 160;
   const inEye = x > 242 && x < 286 && y > 152 && y < 180;
   const eye = inEye && (pix < 45 || chroma < 20);
   if (hoof || nose || eye) return [r, g, b];
@@ -202,7 +202,8 @@ await writeCoat('chestnut', (r, g, b, x, y) => {
     else hi = mid;
   }
   const jitter = Math.round((uhash(x >> 1, y >> 1) - 0.5) * 700);
-  const sample = refByLight[Math.max(0, Math.min(refByLight.length - 1, lo + jitter))];
+  const sample =
+    refByLight[Math.max(0, Math.min(refByLight.length - 1, lo + jitter))];
   return [
     clampByte(sample[1] + (r - pix) * 0.25),
     clampByte(sample[2] + (g - pix) * 0.15),

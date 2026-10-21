@@ -134,7 +134,9 @@ function buildJobs() {
   }
 
   // Arabian coats include mane and tail. There is no pie overlay.
-  const ARABIAN_MARKINGS = MARKING_CHOICES.filter((marking) => marking !== 'bald');
+  const ARABIAN_MARKINGS = MARKING_CHOICES.filter(
+    (marking) => marking !== 'bald',
+  );
   for (const coat of ARABIAN_COATS) {
     for (const marking of ARABIAN_MARKINGS) {
       const markId = marking ?? 'none';

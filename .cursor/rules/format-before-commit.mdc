@@ -1,0 +1,17 @@
+---
+description: Run Prettier before every Klairox commit so CI format:check stays green
+alwaysApply: true
+---
+
+# Format before commit
+
+CI runs `npx nx format:check --base=origin/main`. ESLint does not check `tools/*.mjs`, so lint and tests can pass while this step fails.
+
+Before every `git commit`:
+
+```bash
+npx nx format:write
+npx nx format:check --base=origin/main
+```
+
+Prettier print width is 80. Do not commit a file that `format:check` reports.

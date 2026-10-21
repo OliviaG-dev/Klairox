@@ -49,6 +49,17 @@ const COATS = [
   'cream',
 ];
 
+/** Arabian has no palomino or cream. */
+const ARABIAN_COATS = [
+  'bay',
+  'bay-brun',
+  'black',
+  'chestnut',
+  'grey',
+  'roan',
+  'isabelle',
+];
+
 const MARKINGS = [
   'blaze',
   'thin-blaze',
@@ -118,6 +129,21 @@ function buildJobs() {
       /** @type {Record<string, string>} */
       const selection = { body: 'lusitano', 'coat-lusitano': coat };
       if (marking) selection['markings-lusitano'] = marking;
+      jobs.push({ name, selection });
+    }
+  }
+
+  // Arabian coats include mane and tail. There is no pie overlay.
+  const ARABIAN_MARKINGS = MARKING_CHOICES.filter(
+    (marking) => marking !== 'bald',
+  );
+  for (const coat of ARABIAN_COATS) {
+    for (const marking of ARABIAN_MARKINGS) {
+      const markId = marking ?? 'none';
+      const name = `stalloria-arabian-${coat}-pie-none-mark-${markId}`;
+      /** @type {Record<string, string>} */
+      const selection = { body: 'arabian', 'coat-arabian': coat };
+      if (marking) selection['markings-arabian'] = marking;
       jobs.push({ name, selection });
     }
   }
@@ -1066,7 +1092,7 @@ async function main() {
     skipped,
     failed,
     matrix: {
-      body: ['standard', 'foal', 'lusitano'],
+      body: ['standard', 'foal', 'lusitano', 'arabian'],
       coat: COATS,
       pie: ['none', 'tobiano'],
       markings: ['none', ...MARKINGS],

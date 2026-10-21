@@ -193,17 +193,9 @@ await writeCoat('chestnut', (r, g, b, x, y) => {
   const pix = lum(r, g, b);
   const chroma = Math.max(r, g, b) - Math.min(r, g, b);
   const hoof = y > 910 && pix > 90 && chroma < 55;
-  const nose =
-    x > 140 &&
-    x < 230 &&
-    y > 240 &&
-    y < 340 &&
-    chroma < 28 &&
-    pix > 40 &&
-    pix < 160;
   const inEye = x > 242 && x < 286 && y > 152 && y < 180;
   const eye = inEye && (pix < 45 || chroma < 20);
-  if (hoof || nose || eye) return [r, g, b];
+  if (hoof || eye) return [r, g, b];
   const t = Math.min(1, Math.max(0, (pix + 18) / 150));
   const target = 52 + Math.pow(t, 0.85) * 78;
   let lo = 0;

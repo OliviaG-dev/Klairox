@@ -574,11 +574,6 @@
           "asset": "layers/markings/Arabian/star-snip.png"
         },
         {
-          "id": "bald",
-          "title": "Bald face (grosse liste)",
-          "asset": "layers/markings/Arabian/bald.png"
-        },
-        {
           "id": "crescent",
           "title": "Crescent (croissant)",
           "asset": "layers/markings/Arabian/crescent.png"

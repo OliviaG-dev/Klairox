@@ -61,7 +61,7 @@ describe('loadPlugin', () => {
       10,
     );
     expect(plugin.index.layers.get('markings-arabian')?.options).toHaveLength(
-      10,
+      9,
     );
     expect(plugin.index.layers.get('coat')?.blendMode).toBe('normal');
     expect(plugin.index.layers.get('body')?.options.map((o) => o.id)).toEqual([

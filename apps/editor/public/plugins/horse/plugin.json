@@ -36,6 +36,11 @@
           "id": "arabian",
           "title": "Arabe",
           "asset": "layers/body/arabian.png"
+        },
+        {
+          "id": "selle-francais",
+          "title": "Selle Français",
+          "asset": "layers/body/selle-francais.png"
         }
       ]
     },
@@ -280,6 +285,52 @@
           "title": "Isabelle",
           "asset": "layers/coat-arabian/isabelle.png",
           "tags": ["light"]
+        }
+      ]
+    },
+    {
+      "id": "coat-selle-francais",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat-selle-francais/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat-selle-francais/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat-selle-francais/chestnut.png"
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat-selle-francais/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat-selle-francais/grey.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "roan",
+          "title": "Roan",
+          "asset": "layers/coat-selle-francais/roan.png",
+          "tags": ["dark"]
         }
       ]
     },
@@ -648,7 +699,8 @@
         "markings-arabian",
         "mane",
         "equipment",
-        "coat-arabian"
+        "coat-arabian",
+        "coat-selle-francais"
       ]
     },
     {
@@ -665,26 +717,59 @@
         "markings-foal",
         "markings-lusitano",
         "mane",
+        "equipment",
+        "coat-selle-francais"
+      ]
+    },
+    {
+      "id": "body-not-painted-selle-francais",
+      "description": "Selle Français coats carry the full silhouette; the build axis is selection-only",
+      "when": { "body": "selle-francais" },
+      "hide": ["body"]
+    },
+    {
+      "id": "selle-francais-hides-other-coats",
+      "description": "Selle Français coats are used for the Selle Français build",
+      "when": { "body": "selle-francais" },
+      "hide": [
+        "coat",
+        "coat-foal",
+        "coat-lusitano",
+        "coat-arabian",
+        "pie",
+        "pie-foal",
+        "markings",
+        "markings-foal",
+        "markings-lusitano",
+        "markings-arabian",
+        "mane",
         "equipment"
       ]
     },
     {
       "id": "mane-not-painted",
       "description": "Coat masters still include mane and tail; the mane axis is selection-only until hair is split",
-      "when": { "body": ["standard", "foal", "lusitano", "arabian"] },
+      "when": {
+        "body": ["standard", "foal", "lusitano", "arabian", "selle-francais"]
+      },
       "hide": ["mane"]
     },
     {
       "id": "standard-hides-foal-coat",
       "description": "Adult coats are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["coat-foal", "coat-lusitano", "coat-arabian"]
+      "hide": [
+        "coat-foal",
+        "coat-lusitano",
+        "coat-arabian",
+        "coat-selle-francais"
+      ]
     },
     {
       "id": "foal-hides-standard-coat",
       "description": "Foal coats are used for the foal build",
       "when": { "body": "foal" },
-      "hide": ["coat", "coat-lusitano", "coat-arabian"]
+      "hide": ["coat", "coat-lusitano", "coat-arabian", "coat-selle-francais"]
     },
     {
       "id": "foal-hides-adult-overlays",

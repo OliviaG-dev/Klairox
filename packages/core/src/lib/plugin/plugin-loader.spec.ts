@@ -53,8 +53,8 @@ describe('loadPlugin', () => {
     const plugin = await loadPlugin(EXAMPLE_PLUGIN_DIR);
 
     expect(plugin.manifest.name).toBe('horse');
-    expect(plugin.manifest.layers).toHaveLength(13);
-    expect(plugin.manifest.constraints).toHaveLength(15);
+    expect(plugin.manifest.layers).toHaveLength(14);
+    expect(plugin.manifest.constraints).toHaveLength(17);
     expect(plugin.index.layers.get('markings')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('markings-foal')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('markings-lusitano')?.options).toHaveLength(
@@ -69,7 +69,11 @@ describe('loadPlugin', () => {
       'foal',
       'lusitano',
       'arabian',
+      'selle-francais',
     ]);
+    expect(
+      plugin.index.layers.get('coat-selle-francais')?.options,
+    ).toHaveLength(6);
     expect(plugin.index.layers.get('coat-lusitano')?.options).toHaveLength(9);
     expect(plugin.index.layers.get('body')?.options[0]?.title).toBe(
       'Standard-OC',

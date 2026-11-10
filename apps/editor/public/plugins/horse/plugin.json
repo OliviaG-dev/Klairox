@@ -632,6 +632,64 @@
       ]
     },
     {
+      "id": "markings-selle-francais",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat-selle-francais"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze (liste)",
+          "asset": "layers/markings/SelleFrancais/blaze.png"
+        },
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/SelleFrancais/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/SelleFrancais/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/SelleFrancais/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/SelleFrancais/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/SelleFrancais/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/SelleFrancais/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/SelleFrancais/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/SelleFrancais/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/SelleFrancais/crescent.png"
+        }
+      ]
+    },
+    {
       "id": "mane",
       "title": "Mane",
       "order": 40,
@@ -697,6 +755,7 @@
         "markings",
         "markings-foal",
         "markings-arabian",
+        "markings-selle-francais",
         "mane",
         "equipment",
         "coat-arabian",
@@ -780,6 +839,7 @@
         "markings",
         "markings-lusitano",
         "markings-arabian",
+        "markings-selle-francais",
         "equipment"
       ]
     },
@@ -793,7 +853,12 @@
       "id": "standard-hides-foal-markings",
       "description": "Adult face markings are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["markings-foal", "markings-lusitano", "markings-arabian"]
+      "hide": [
+        "markings-foal",
+        "markings-lusitano",
+        "markings-arabian",
+        "markings-selle-francais"
+      ]
     },
     {
       "id": "pie-hides-markings",

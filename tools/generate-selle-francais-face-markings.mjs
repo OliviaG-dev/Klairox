@@ -94,14 +94,17 @@ function buildFrame(data, width) {
  * so the stripe follows the silhouette instead of a dish.
  */
 function blazeX(y) {
+  // Centre of the chamfrein: ~30px behind the nose outline,
+  // in front of the eye (x≈230), not down the cheek.
   const pts = [
-    [108, 214],
-    [150, 204],
-    [180, 198],
-    [220, 190],
-    [260, 176],
-    [290, 166],
-    [322, 154],
+    [108, 176],
+    [140, 172],
+    [170, 160],
+    [200, 152],
+    [230, 148],
+    [260, 146],
+    [290, 132],
+    [320, 118],
   ];
   if (y <= pts[0][0]) return pts[0][1];
   if (y >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
@@ -133,73 +136,104 @@ function blazeCenter(y) {
 }
 
 function blazeCoverage(x, y) {
-  if (y < 148 || y > 326) return 0;
-  const t = clamp((y - 156) / (312 - 156));
+  const py = y - 36;
+  if (py < 148 || py > 326) return 0;
+  const t = clamp((py - 156) / (312 - 156));
   const crown = smoothstep(0.02, 0.12, t);
-  const shaft = smoothstep(168, 190, y) * (1 - smoothstep(250, 280, y));
-  const half = (10 + 4 * crown) * (1 - t * 0.18) * (1 - 0.34 * shaft);
-  const swing = 0.8;
+  const shaft = smoothstep(168, 190, py) * (1 - smoothstep(250, 280, py));
+  const crownIn = smoothstep(154, 188, py);
+  const half =
+    (10 + 4 * crown) *
+    (1 - t * 0.18) *
+    (1 - 0.34 * shaft) *
+    (0.28 + 0.72 * crownIn);
+  const swing = 3.2;
   const nearNostril = smoothstep(0.62, 0.92, t);
-  const nearEye = Math.exp(-(((y - 158) / 28) ** 2));
+  const nearEye = Math.exp(-(((py - 158) / 28) ** 2));
+  const topWide =
+    7 * smoothstep(0.1, 0.24, t) * (1 - smoothstep(0.24, 0.42, t));
   const neck =
     -(
       half * (1 - 0.72 * nearNostril) * (1 - 0.42 * nearEye) +
       (fbm(t * 2.2, 1.1) - 0.5) * swing
-    ) +
-    Math.exp(-(((y - 286) / 22) ** 2)) * 8;
+    ) -
+    topWide +
+    Math.exp(-(((py - 286) / 22) ** 2)) * 8;
   const nose = half + (fbm(t * 2.1, 6.3) - 0.5) * swing;
-  const s = blazeCenter(y) - x;
+  const left = 4 + 14 * smoothstep(200, 280, y);
+  const wander =
+    (fbm(t * 3.6, 2.8) - 0.5) * 8 + (fbm(t * 9.2, 6.4) - 0.5) * 3.4;
+  const s = blazeCenter(y) - left - x - wander;
   const band =
-    y >= 158 && y <= 318
+    py >= 158 && py <= 318
       ? Math.min(
           smoothstep(neck - 6, neck + 5, s),
           1 - smoothstep(nose - 5, nose + 6, s),
         )
       : 0;
-  const lip = 1 - smoothstep(300, 322, y + (fbm(s * 0.35, 4.2) - 0.5) * 12);
-  const fringe = (fbm(x * 0.22, y * 0.18) - 0.5) * 0.12;
-  const cap = Math.hypot((blazeCenter(162) - x) / 11, (y - 162) / 9) + fringe;
-  const dome = (1 - smoothstep(0.72, 1.02, cap)) * smoothstep(150, 160, y);
+  const lip = 1 - smoothstep(300, 322, py + (fbm(s * 0.35, 4.2) - 0.5) * 12);
+  const fringe = (fbm(x * 0.22, py * 0.18) - 0.5) * 0.38;
+  const capDx = blazeCenter(204) - left - x - wander;
+  const cap =
+    Math.hypot(capDx / (capDx < 0 ? 13 : 9), (py - 170) / 16) + fringe;
+  const dome = 1 - smoothstep(0.82, 1.12, cap);
   let cov = Math.max(band * lip, dome);
-  if (x > blazeCenter(y)) {
-    const past = smoothstep(2, 16, x - blazeCenter(y));
-    cov *= 1 - 0.7 * nearEye * past;
+  if (x > blazeCenter(y) - left + 6) {
+    const past = smoothstep(8, 24, x - (blazeCenter(y) - left));
+    cov *= 1 - 0.4 * nearEye * past;
   }
   return cov;
 }
 
 function thinBlazeCoverage(x, y) {
-  if (y > 268) return 0;
+  if (y > 318) return 0;
   const c = blazeCenter(y);
-  const groove = Math.exp(-(((y - 248) / 8) ** 2));
-  const inset = x < c ? groove * 10 : 0;
-  const cov = blazeCoverage(c + (x - c) * 2.2 - inset, y);
-  return cov * (1 - smoothstep(248, 266, y));
+  // Same squeezed blaze as before; only the axis leans with the head.
+  const lean = (280 - y) * 0.28 - 15 - 6 * (1 - smoothstep(210, 255, y));
+  const top = 1 - smoothstep(205, 252, y);
+  const jag =
+    ((fbm(y * 0.22, 3.1) - 0.5) * 8 + (fbm(y * 0.55, 8.4) - 0.5) * 3.5) * top;
+  const x0 = x - lean - jag;
+  const groove = Math.exp(-(((y - 284) / 8) ** 2));
+  const inset = x0 < c ? groove * 10 : 0;
+  const yJag = (fbm(x0 * 0.45, 2.6) - 0.5) * 9 * top;
+  const cov = blazeCoverage(c + (x0 - c) * 2.2 - inset, y + yJag);
+  return cov * (1 - smoothstep(298, 316, y));
 }
 
 function stripeDash(x, y, y0, y1, shift, lean, inner) {
   if (y < y0 - 18 || y > y1 + 18) return 0;
   const u = clamp((y - y0) / Math.max(1, y1 - y0));
+  const low = y0 > 250;
   const swell = 0.35 + 0.65 * fbm(u * 2.8 + y0 * 0.01, 2.4);
-  const pinch =
-    inner === 'bottom' ? 0.45 + 0.55 * Math.sin(Math.PI * clamp(u)) : 1;
-  const half = (2.2 + 6.2 * swell) * pinch;
+  const pinch = low
+    ? 0.25 + 0.75 * Math.sin(Math.PI * clamp(u))
+    : inner === 'bottom'
+      ? 0.4 + 0.85 * (1 - u)
+      : 1;
+  const half = (1.3 + (low ? 2.6 : 3.6) * swell) * pinch;
   const neck = -(half * (0.55 + 0.7 * fbm(u * 3.4, 4.1)));
   const nose = half * (0.5 + 0.75 * fbm(u * 3.1, 8.6));
   const yy = Math.max(y0, Math.min(y1, y));
-  const wander = (fbm(u * 1.7, y0 * 0.02) - 0.5) * 1.6;
-  const s = blazeCenter(yy) - x - shift - wander;
+  const wander = (fbm(u * 1.7, y0 * 0.02) - 0.5) * 3.2;
+  const left = 4 + 14 * smoothstep(200, 280, yy);
+  const s = blazeCenter(yy) - left - x - shift - wander;
   const across = Math.min(
     smoothstep(neck - 2.3, neck + 1.7, s),
     1 - smoothstep(nose - 1.7, nose + 2.3, s),
   );
-  const jag = (fbm(s * 0.3, inner === 'bottom' ? 2.1 : 6.8) - 0.5) * 14;
-  const outer =
-    inner === 'bottom'
+  const jag =
+    (fbm(s * 0.3, low ? 4.4 : inner === 'bottom' ? 2.1 : 6.8) - 0.5) *
+    (low ? 18 : 14);
+  const outer = low
+    ? smoothstep(y0 - 4, y0 + 16, y + jag * 0.35) *
+      (1 - smoothstep(y1 - 18, y1 + 2, y - jag * 0.35))
+    : inner === 'bottom'
       ? smoothstep(y0 - 8, y0 + 5, y)
       : 1 - smoothstep(y1 - 5, y1 + 8, y);
-  const facing =
-    inner === 'bottom'
+  const facing = low
+    ? 1
+    : inner === 'bottom'
       ? 1 - smoothstep(y1 + jag - 2.4, y1 + jag + 4, y)
       : smoothstep(y0 + jag - 4, y0 + jag + 2.4, y);
   return across * outer * facing;
@@ -207,15 +241,15 @@ function stripeDash(x, y, y0, y1, shift, lean, inner) {
 
 function stripeCoverage(x, y) {
   return Math.max(
-    stripeDash(x, y, 136, 178, 0, 0, 'bottom'),
-    stripeDash(x, y, 214, 272, 4, 0, 'top'),
+    stripeDash(x, y, 206, 236, 0, 0, 'bottom'),
+    stripeDash(x, y, 264, 312, 6, 0, 'top'),
   );
 }
 
 function starCoverage(x, y) {
-  const cy = 146;
-  const cx = blazeCenter(cy) + 2;
-  if (y < 122) return 0;
+  const cy = 208;
+  const cx = 143;
+  if (y < 96) return 0;
   const dx = x - cx;
   const dy = y - cy;
   const ang = Math.atan2(dy, dx);
@@ -236,22 +270,26 @@ function starCoverage(x, y) {
 }
 
 function diamondCoverage(x, y) {
-  const cy = 146;
-  const cx = blazeCenter(cy) + 2;
+  const cy = 208;
+  const cx = 143;
   if (y < 122) return 0;
   const dx = x - cx;
   const dy = y - cy;
   const ang = Math.atan2(dy, dx);
   const wobble =
-    (fbm(Math.cos(ang) * 2.4 + 2, Math.sin(ang) * 2.4 + 5) - 0.5) * 0.42 +
-    (fbm(Math.cos(ang) * 5.5, Math.sin(ang) * 5.5 + 1) - 0.5) * 0.18;
-  const d = Math.abs(dx) / 16 + Math.abs(dy) / 21 + wobble;
-  return 1 - smoothstep(0.82, 1.06, d);
+    (fbm(Math.cos(ang) * 2.2 + 2, Math.sin(ang) * 2.2 + 5) - 0.5) * 0.2 +
+    (fbm(y * 0.14, x * 0.12) - 0.5) * 0.1;
+  const rx = dx < 0 ? 11 : 13.5;
+  const ry = dy < 0 ? 17 : 20;
+  const diamond = Math.abs(dx) / rx + Math.abs(dy) / ry;
+  const round = Math.hypot(dx / (rx * 1.15), dy / (ry * 1.05));
+  const d = diamond * 0.7 + round * 0.3 + wobble;
+  return 1 - smoothstep(0.76, 1.12, d);
 }
 
 function heartCoverage(x, y) {
-  const cy = 144;
-  const cx = blazeCenter(cy) + 2;
+  const cy = 208;
+  const cx = 143;
   if (y < 120) return 0;
   const dx = x - cx;
   const dy = y - cy;
@@ -275,87 +313,133 @@ function heartCoverage(x, y) {
   return Math.max(lobes, point * (1 - smoothstep(16, 24, dy)));
 }
 
+function muzzleEdge(y) {
+  const pts = [
+    [320, 87],
+    [336, 81],
+    [352, 78],
+    [368, 81],
+    [384, 92],
+  ];
+  if (y <= pts[0][0]) return pts[0][1];
+  if (y >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  for (let i = 1; i < pts.length; i++) {
+    const [y0, x0] = pts[i - 1];
+    const [y1, x1] = pts[i];
+    if (y <= y1) {
+      const u = (y - y0) / (y1 - y0);
+      return x0 + (x1 - x0) * u;
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
 function snipCoverage(x, y) {
-  const cy = 292;
-  const cx = blazeCenter(cy) - 6;
-  const dx = x - cx;
+  const cy = 358;
   const dy = y - cy;
-  if (dy < -22 || dy > 18) return 0;
-  const u = (dy + 22) / 40;
+  const u0 = (dy + 42) / 58;
+  const nearNostril = smoothstep(0.55, 0.9, u0);
+  const wander =
+    (fbm(u0 * 4.8, 2.2) - 0.5) * (2.2 + 7 * nearNostril) +
+    (fbm(y * 0.35, 7.1) - 0.5) * 4.5 * nearNostril;
+  const dx = x - (muzzleEdge(y) + 10 + wander);
+  if (dy < -42 || dy > 16) return 0;
+  const u = u0;
+  const bulge = Math.sin(Math.PI * clamp(u));
   const half =
-    3.4 + 7.4 * fbm(u * 2.4, 3.3) + 2.5 * Math.sin(u * Math.PI * 1.7);
-  const neck = -(half * (0.65 + 0.5 * fbm(u * 3.1, 1.4)));
-  const nose = half * (0.55 + 0.6 * fbm(u * 2.7, 8.2));
-  const across = Math.min(
-    smoothstep(neck - 1.8, neck + 1.2, -dx),
-    1 - smoothstep(nose - 1.2, nose + 1.8, -dx),
-  );
-  const end = (fbm(dx * 0.26, 5.5) - 0.5) * 5.4;
-  const along =
-    smoothstep(-22, -14, dy + end) * (1 - smoothstep(12, 18, dy - end * 0.6));
-  const cap = Math.hypot(dx / 12, (dy + 18) / 10);
-  const roundTop = dy < -12 ? 1 - smoothstep(0.55, 1.08, cap) : 1;
-  return across * along * roundTop;
+    (1.8 +
+      4.6 * fbm(u * 2.4, 3.3) +
+      nearNostril * (fbm(u * 9, 3.6) - 0.5) * 5) *
+    (0.15 + 0.85 * bulge * bulge) *
+    (1 - 0.55 * nearNostril);
+  const jag = (fbm(u * 6.2, 4.4) - 0.5) * (2.6 + 5 * nearNostril);
+  const across = 1 - smoothstep(half - 1.6, half + 2.8, Math.abs(dx) + jag);
+  const round =
+    dy < -8
+      ? 1 - smoothstep(0.78, 1.08, Math.hypot(dx / 9, (dy + 16) / 16))
+      : 0;
+  return Math.max(across * bulge, round);
 }
 
 function starSnipCoverage(x, y) {
-  const cy = 146;
-  const cx = blazeCenter(cy) + 2;
+  const cy = 208;
+  const cx = 149;
   let top = 0;
   if (y >= 122) {
     const dx = x - cx;
     const dy = y - cy;
     const ang = Math.atan2(dy, dx);
-    const arms = [-1.4, 0.02, 1.55, 2.28, -2.15];
-    const reach = [11, 19, 13, 16, 7];
-    const wide = [0.72, 0.78, 0.7, 0.64, 0.58];
-    let arm = 0;
-    for (let i = 0; i < arms.length; i++) {
-      let delta = Math.abs(ang - arms[i]);
-      if (delta > Math.PI) delta = Math.PI * 2 - delta;
-      const t = clamp(delta / wide[i]);
-      const lobe = Math.cos(t * Math.PI * 0.5);
-      arm = Math.max(arm, lobe * lobe * reach[i]);
-    }
-    const radius =
-      8 +
-      arm * (0.72 + 0.55 * fbm(Math.cos(ang) * 2.2 + 3, Math.sin(ang) * 2.2)) +
-      (fbm(ang * 3.4 + 1, 4.2) - 0.5) * 4.5;
-    const d = Math.hypot(dx, dy);
-    top = 1 - smoothstep(radius - 2.2, radius + 2.4, d);
+    const wobble =
+      (fbm(Math.cos(ang) * 2.2 + 1, Math.sin(ang) * 2.2) - 0.5) * 0.4 +
+      (fbm(Math.cos(ang) * 5.2, Math.sin(ang) * 5.2 + 3) - 0.5) * 0.22;
+    const d = Math.hypot(dx / 12, dy / 19) + wobble;
+    top = 1 - smoothstep(0.78, 1.08, d);
   }
   return Math.max(top, snipCoverage(x, y));
 }
 
+function baldOuter(y) {
+  const pts = [
+    [192, 147],
+    [214, 154],
+    [226, 166],
+    [238, 174],
+    [252, 164],
+    [270, 152],
+    [292, 172],
+    [314, 150],
+    [332, 140],
+    [350, 124],
+    [364, 108],
+    [376, 98],
+  ];
+  if (y <= pts[0][0]) return pts[0][1];
+  if (y >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  for (let i = 1; i < pts.length; i++) {
+    const [y0, x0] = pts[i - 1];
+    const [y1, x1] = pts[i];
+    if (y <= y1) {
+      const u = (y - y0) / (y1 - y0);
+      const s = u * u * (3 - 2 * u);
+      return x0 + (x1 - x0) * s;
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
 function baldCoverage(x, y) {
-  if (y < 108 || y > 320 || !LEFT) return 0;
-  const t = clamp((y - 118) / (310 - 118));
-  const cx = blazeCenter(y) + 12;
-  const s = cx - x;
+  if (y < 192 || y > 378 || !LEFT) return 0;
   const edge = LEFT[Math.max(0, Math.min(SIZE - 1, Math.round(y)))];
   if (edge < 0) return 0;
-  const inside = smoothstep(1, 8, x - edge);
-  const right =
-    18 +
-    16 * Math.exp(-(((y - 150) / 36) ** 2)) +
-    (fbm(t * 2.4, 2.1) - 0.5) * 4;
-  const left =
-    36 + 8 * smoothstep(0.45, 0.85, t) + (fbm(t * 4.1, 6.4) - 0.5) * 5;
-  const across = Math.min(
-    smoothstep(-right - 6, -right + 5, s),
-    1 - smoothstep(left - 4, left + 5, s),
-  );
-  const crownX = blazeCenter(136) + 8;
-  const crown =
-    1 - smoothstep(0.8, 1.04, Math.hypot((x - crownX) / 40, (y - 140) / 26));
-  const top = y < 156 ? crown : 1;
-  const lip = 1 - smoothstep(302, 322, y + (fbm(s * 0.2, 4) - 0.5) * 8);
-  return across * inside * top * lip;
+  const t = clamp((y - 205) / (365 - 205));
+  const jag =
+    (fbm(t * 2.1, 1.4) - 0.5) * 12 +
+    (fbm(y * 0.16, 4.6) - 0.5) * 8 +
+    (fbm(y * 0.48, 8.8) - 0.5) * 5;
+  const outerX = baldOuter(y) + jag;
+  const fromNose = x - edge;
+  const inside = smoothstep(2, 8, fromNose);
+  const outer = 1 - smoothstep(outerX - 9, outerX + 11, x);
+  const top = smoothstep(192, 208, y + (fbm(x * 0.08, 2.4) - 0.5) * 6);
+  const lip = 1 - smoothstep(346, 376, y + (fbm(x * 0.12, 3.2) - 0.5) * 16);
+  let cov = inside * outer * top * lip;
+  const hollow =
+    1 -
+    smoothstep(
+      0.5,
+      1.04,
+      Math.hypot((x - 166) / 15, (y - 268) / 13) +
+        (fbm(x * 0.16, y * 0.14) - 0.5) * 0.16,
+    );
+  cov = Math.max(cov, hollow * inside);
+  const eye = Math.hypot((x - 190) / 30, (y - 221) / 22);
+  cov *= smoothstep(0.78, 1.04, eye);
+  return cov;
 }
 
 function crescentCoverage(x, y) {
-  const cy = 146;
-  const cx = blazeCenter(cy) + 2;
+  const cy = 208;
+  const cx = 151;
   if (y < 122) return 0;
   const dx = x - cx;
   const dy = y - cy;
@@ -413,27 +497,32 @@ function paint(id, bay, width, height) {
       if (cov <= 0.04) continue;
 
       const L = 0.2126 * bay[i] + 0.7152 * bay[i + 1] + 0.0722 * bay[i + 2];
-      const form =
-        id === 'bald'
-          ? clamp(0.58 + (L - 32) / 120, 0.5, 1.1)
-          : clamp(0.74 + (L - 50) / 240, 0.62, 1.02);
-      const side = id === 'blaze' ? clamp((blazeX(y) - x) / 12, -1, 1) : 0;
-      let r = 244 * form * (1 + side * 0.04);
-      let g = 238 * form * (1 + side * 0.03);
-      let b = 230 * form * (1 - side * 0.02);
-      if (id === 'bald') {
-        const spec = smoothstep(145, 205, L);
-        r += 22 * spec;
-        g += 20 * spec;
-        b += 16 * spec;
-      }
+      const hair =
+        (fbm(x * 0.07, y * 0.16) - 0.5) * 0.1 +
+        (fbm(x * 0.2 + y * 0.04, y * 0.08) - 0.5) * 0.05;
+      const noseShade = LEFT
+        ? smoothstep(16, 3, x - LEFT[Math.min(SIZE - 1, y)]) * 0.1
+        : 0;
+      const lit = clamp((L - 28) / 130, 0, 1);
+      const form = clamp(0.58 + lit * 0.55 + hair - noseShade, 0.46, 1.18);
+      const spec = smoothstep(150, 210, L);
+      let r = 236 * form + 18 * spec;
+      let g = 230 * form + 16 * spec;
+      let b = 222 * form + 12 * spec;
+      const cavity =
+        id === 'bald' && y > 338 && L < 62 ? clamp((62 - L) / 48, 0, 1) : 0;
+      const hairs = fbm(x * 0.28, y * 0.22);
       const pink =
         id === 'bald'
-          ? smoothstep(226, 318, y) *
-            (0.78 + 0.22 * smoothstep(-10, 16, blazeX(y) - x)) *
-            (0.88 + 0.12 * fbm(x * 0.08, y * 0.1))
-          : smoothstep(0.78, 0.92, (y - Y_FORE) / (Y_LIP - Y_FORE)) *
-            (0.55 + 0.45 * smoothstep(0, 9, blazeX(y) - x + 6));
+          ? clamp(
+              smoothstep(350, 376, y + (hairs - 0.5) * 18) *
+                (0.55 + 0.2 * fbm(x * 0.1, y * 0.08)) *
+                (1 - cavity * 0.35),
+              0,
+              1,
+            )
+          : smoothstep(0.86, 0.97, (y - Y_FORE) / (Y_LIP - Y_FORE)) *
+            (0.45 + 0.4 * smoothstep(0, 9, blazeX(y) - x + 6));
       if (
         id === 'blaze' ||
         id === 'bald' ||
@@ -451,8 +540,14 @@ function paint(id, bay, width, height) {
         b =
           b * (1 - pink * (id === 'bald' ? 0.82 : 0.7)) +
           (id === 'bald' ? 138 : 148) * pink;
+        if (id === 'bald' && cavity > 0) {
+          const rim = clamp(1 - cavity, 0, 1) * smoothstep(28, 55, L);
+          r = r * (1 - cavity * 0.72) + 168 * rim * 0.35;
+          g = g * (1 - cavity * 0.78) + 96 * rim * 0.3;
+          b = b * (1 - cavity * 0.68) + 92 * rim * 0.25;
+        }
       }
-      const alpha = smoothstep(0.08, 0.35, cov);
+      const alpha = smoothstep(0.04, 0.62, cov);
       out[i] = Math.round(clamp(r, 0, 255));
       out[i + 1] = Math.round(clamp(g, 0, 255));
       out[i + 2] = Math.round(clamp(b, 0, 255));
@@ -460,7 +555,7 @@ function paint(id, bay, width, height) {
     }
   }
   const once = blurEdge(out, width, height);
-  return id === 'blaze' ? blurEdge(once, width, height) : once;
+  return blurEdge(once, width, height);
 }
 
 function blurEdge(src, width, height) {

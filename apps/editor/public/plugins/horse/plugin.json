@@ -41,6 +41,11 @@
           "id": "selle-francais",
           "title": "Selle Français",
           "asset": "layers/body/selle-francais.png"
+        },
+        {
+          "id": "paint-horse",
+          "title": "Paint Horse",
+          "asset": "layers/body/paint-horse.png"
         }
       ]
     },
@@ -331,6 +336,70 @@
           "title": "Roan",
           "asset": "layers/coat-selle-francais/roan.png",
           "tags": ["dark"]
+        }
+      ]
+    },
+    {
+      "id": "coat-paint-horse",
+      "title": "Coat",
+      "order": 20,
+      "required": true,
+      "dependsOn": ["body"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "bay",
+          "title": "Bay",
+          "asset": "layers/coat-paint-horse/bay.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "bay-brun",
+          "title": "Bay-brun",
+          "asset": "layers/coat-paint-horse/bay-brun.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "black",
+          "title": "Black",
+          "asset": "layers/coat-paint-horse/black.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "chestnut",
+          "title": "Chestnut",
+          "asset": "layers/coat-paint-horse/chestnut.png"
+        },
+        {
+          "id": "grey",
+          "title": "Grey",
+          "asset": "layers/coat-paint-horse/grey.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "roan",
+          "title": "Roan",
+          "asset": "layers/coat-paint-horse/roan.png",
+          "tags": ["dark"]
+        },
+        {
+          "id": "palomino",
+          "title": "Palomino",
+          "asset": "layers/coat-paint-horse/palomino.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "isabelle",
+          "title": "Isabelle",
+          "asset": "layers/coat-paint-horse/isabelle.png",
+          "tags": ["light"]
+        },
+        {
+          "id": "cream",
+          "title": "Cream",
+          "asset": "layers/coat-paint-horse/cream.png",
+          "tags": ["light"]
         }
       ]
     },
@@ -759,7 +828,8 @@
         "mane",
         "equipment",
         "coat-arabian",
-        "coat-selle-francais"
+        "coat-selle-francais",
+        "coat-paint-horse"
       ]
     },
     {
@@ -778,7 +848,8 @@
         "markings-selle-francais",
         "mane",
         "equipment",
-        "coat-selle-francais"
+        "coat-selle-francais",
+        "coat-paint-horse"
       ]
     },
     {
@@ -803,6 +874,34 @@
         "markings-lusitano",
         "markings-arabian",
         "mane",
+        "equipment",
+        "coat-paint-horse"
+      ]
+    },
+    {
+      "id": "body-not-painted-paint-horse",
+      "description": "Paint Horse coats carry the full silhouette; the build axis is selection-only",
+      "when": { "body": "paint-horse" },
+      "hide": ["body"]
+    },
+    {
+      "id": "paint-horse-hides-other-coats",
+      "description": "Paint Horse coats are used for the Paint Horse build",
+      "when": { "body": "paint-horse" },
+      "hide": [
+        "coat",
+        "coat-foal",
+        "coat-lusitano",
+        "coat-arabian",
+        "coat-selle-francais",
+        "pie",
+        "pie-foal",
+        "markings",
+        "markings-foal",
+        "markings-lusitano",
+        "markings-arabian",
+        "markings-selle-francais",
+        "mane",
         "equipment"
       ]
     },
@@ -810,7 +909,14 @@
       "id": "mane-not-painted",
       "description": "Coat masters still include mane and tail; the mane axis is selection-only until hair is split",
       "when": {
-        "body": ["standard", "foal", "lusitano", "arabian", "selle-francais"]
+        "body": [
+          "standard",
+          "foal",
+          "lusitano",
+          "arabian",
+          "selle-francais",
+          "paint-horse"
+        ]
       },
       "hide": ["mane"]
     },
@@ -822,14 +928,21 @@
         "coat-foal",
         "coat-lusitano",
         "coat-arabian",
-        "coat-selle-francais"
+        "coat-selle-francais",
+        "coat-paint-horse"
       ]
     },
     {
       "id": "foal-hides-standard-coat",
       "description": "Foal coats are used for the foal build",
       "when": { "body": "foal" },
-      "hide": ["coat", "coat-lusitano", "coat-arabian", "coat-selle-francais"]
+      "hide": [
+        "coat",
+        "coat-lusitano",
+        "coat-arabian",
+        "coat-selle-francais",
+        "coat-paint-horse"
+      ]
     },
     {
       "id": "foal-hides-adult-overlays",

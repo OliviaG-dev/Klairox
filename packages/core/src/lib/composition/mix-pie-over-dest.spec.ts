@@ -6,6 +6,7 @@ import {
   isWhiteOverlayLayer,
   liftPieWhite,
   mixPieOverDest,
+  whiteMixProfile,
 } from './mix-pie-over-dest.js';
 
 function px(r: number, g: number, b: number, a: number): Uint8ClampedArray {
@@ -20,6 +21,7 @@ describe('mixPieOverDest', () => {
   it('recognises pie and face-marking white overlays', () => {
     expect(isPieOverlayLayer('pie')).toBe(true);
     expect(isPieOverlayLayer('pie-foal')).toBe(true);
+    expect(isPieOverlayLayer('pie-paint-horse')).toBe(true);
     expect(isMarkingOverlayLayer('markings')).toBe(true);
     expect(isMarkingOverlayLayer('markings-foal')).toBe(true);
     expect(isMarkingOverlayLayer('markings-lusitano')).toBe(true);
@@ -74,6 +76,25 @@ describe('mixPieOverDest', () => {
     expect(liftPieWhite(220, 178, 168)).toEqual([220, 178, 168]);
     expect(isEyeTissue(236, 200, 188)).toBe(true);
     expect(liftPieWhite(236, 200, 188)).toEqual([236, 200, 188]);
+  });
+
+  it('keeps paint horse pie on stocking white, brighter than clay', () => {
+    expect(whiteMixProfile('pie-paint-horse')).toBe('stocking');
+    expect(whiteMixProfile('markings-paint-horse')).toBe('stocking');
+    expect(whiteMixProfile('pie')).toBe('clay');
+    const stocking = liftPieWhite(236, 230, 222, 'stocking');
+    const clay = liftPieWhite(236, 230, 222, 'clay');
+    expect(luma(...stocking)).toBeGreaterThan(luma(...clay) + 20);
+    expect(stocking[0]).toBeGreaterThanOrEqual(240);
+    const dest = px(120, 64, 32, 255);
+    const src = px(236, 230, 222, 255);
+    mixPieOverDest(dest, src, 'stocking');
+    expect(luma(dest[0], dest[1], dest[2])).toBeGreaterThan(160);
+    const lit = px(230, 210, 190, 255);
+    mixPieOverDest(lit, px(236, 230, 222, 255), 'stocking');
+    expect(luma(lit[0], lit[1], lit[2])).toBeGreaterThan(
+      luma(dest[0], dest[1], dest[2]),
+    );
   });
 
   it('keeps shade/light separation on pie-matched whites', () => {

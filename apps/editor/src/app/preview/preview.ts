@@ -8,7 +8,11 @@ import {
 import type { BlendMode } from '@klairox/plugin-sdk';
 import { EditorSession, type PreviewLayer } from '../editor-session';
 import { applyCoatSheen } from './apply-coat-sheen';
-import { isWhiteOverlayLayer, mixPieOverDest } from './mix-pie-over-dest';
+import {
+  isWhiteOverlayLayer,
+  mixPieOverDest,
+  whiteMixProfile,
+} from './mix-pie-over-dest';
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
 
@@ -124,7 +128,7 @@ function drawPieOverDest(
     canvas.height,
   );
   const src = overlay.getImageData(0, 0, canvas.width, canvas.height);
-  mixPieOverDest(dest.data, src.data);
+  mixPieOverDest(dest.data, src.data, whiteMixProfile(layer.layerId));
   ctx.putImageData(dest, 0, 0);
 }
 

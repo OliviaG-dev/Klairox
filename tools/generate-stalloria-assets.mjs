@@ -165,13 +165,17 @@ function buildJobs() {
       coat === 'grey'
         ? MARKING_CHOICES.filter((marking) => marking !== 'bald')
         : MARKING_CHOICES;
-    for (const marking of markings) {
-      const markId = marking ?? 'none';
-      const name = `stalloria-paint-horse-${coat}-pie-none-mark-${markId}`;
-      /** @type {Record<string, string>} */
-      const selection = { body: 'paint-horse', 'coat-paint-horse': coat };
-      if (marking) selection['markings-paint-horse'] = marking;
-      jobs.push({ name, selection });
+    for (const pie of PIES) {
+      for (const marking of markings) {
+        const pieId = pie ?? 'none';
+        const markId = marking ?? 'none';
+        const name = `stalloria-paint-horse-${coat}-pie-${pieId}-mark-${markId}`;
+        /** @type {Record<string, string>} */
+        const selection = { body: 'paint-horse', 'coat-paint-horse': coat };
+        if (pie) selection['pie-paint-horse'] = pie;
+        if (marking) selection['markings-paint-horse'] = marking;
+        jobs.push({ name, selection });
+      }
     }
   }
 

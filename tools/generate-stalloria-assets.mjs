@@ -133,6 +133,44 @@ function buildJobs() {
     }
   }
 
+  // Selle Français coats include mane and tail. There is no pie overlay.
+  const SELLE_COATS = ['bay', 'bay-brun', 'black', 'chestnut', 'grey', 'roan'];
+  for (const coat of SELLE_COATS) {
+    for (const marking of MARKING_CHOICES) {
+      const markId = marking ?? 'none';
+      const name = `stalloria-selle-francais-${coat}-pie-none-mark-${markId}`;
+      /** @type {Record<string, string>} */
+      const selection = {
+        body: 'selle-francais',
+        'coat-selle-francais': coat,
+      };
+      if (marking) selection['markings-selle-francais'] = marking;
+      jobs.push({ name, selection });
+    }
+  }
+
+  const PAINT_COATS = [
+    'bay',
+    'bay-brun',
+    'black',
+    'chestnut',
+    'grey',
+    'roan',
+    'palomino',
+    'isabelle',
+    'cream',
+  ];
+  for (const coat of PAINT_COATS) {
+    for (const marking of MARKING_CHOICES) {
+      const markId = marking ?? 'none';
+      const name = `stalloria-paint-horse-${coat}-pie-none-mark-${markId}`;
+      /** @type {Record<string, string>} */
+      const selection = { body: 'paint-horse', 'coat-paint-horse': coat };
+      if (marking) selection['markings-paint-horse'] = marking;
+      jobs.push({ name, selection });
+    }
+  }
+
   // Arabian coats include mane and tail. There is no pie overlay.
   const ARABIAN_MARKINGS = MARKING_CHOICES.filter(
     (marking) => marking !== 'bald',

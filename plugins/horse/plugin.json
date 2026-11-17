@@ -759,6 +759,64 @@
       ]
     },
     {
+      "id": "markings-paint-horse",
+      "title": "Face markings",
+      "order": 30,
+      "dependsOn": ["coat-paint-horse"],
+      "options": [
+        {
+          "id": "blaze",
+          "title": "Blaze (liste)",
+          "asset": "layers/markings/PaintHorse/blaze.png"
+        },
+        {
+          "id": "thin-blaze",
+          "title": "Thin blaze (fine liste)",
+          "asset": "layers/markings/PaintHorse/thin-blaze.png"
+        },
+        {
+          "id": "stripe",
+          "title": "Stripe (race)",
+          "asset": "layers/markings/PaintHorse/stripe.png"
+        },
+        {
+          "id": "star",
+          "title": "Star (étoile)",
+          "asset": "layers/markings/PaintHorse/star.png"
+        },
+        {
+          "id": "diamond",
+          "title": "Diamond (lozange)",
+          "asset": "layers/markings/PaintHorse/diamond.png"
+        },
+        {
+          "id": "heart",
+          "title": "Heart (cœur)",
+          "asset": "layers/markings/PaintHorse/heart.png"
+        },
+        {
+          "id": "snip",
+          "title": "Snip (pelote)",
+          "asset": "layers/markings/PaintHorse/snip.png"
+        },
+        {
+          "id": "star-snip",
+          "title": "Star and snip",
+          "asset": "layers/markings/PaintHorse/star-snip.png"
+        },
+        {
+          "id": "bald",
+          "title": "Bald face (grosse liste)",
+          "asset": "layers/markings/PaintHorse/bald.png"
+        },
+        {
+          "id": "crescent",
+          "title": "Crescent (croissant)",
+          "asset": "layers/markings/PaintHorse/crescent.png"
+        }
+      ]
+    },
+    {
       "id": "mane",
       "title": "Mane",
       "order": 40,
@@ -825,6 +883,7 @@
         "markings-foal",
         "markings-arabian",
         "markings-selle-francais",
+        "markings-paint-horse",
         "mane",
         "equipment",
         "coat-arabian",
@@ -846,6 +905,7 @@
         "markings-foal",
         "markings-lusitano",
         "markings-selle-francais",
+        "markings-paint-horse",
         "mane",
         "equipment",
         "coat-selle-francais",
@@ -873,6 +933,7 @@
         "markings-foal",
         "markings-lusitano",
         "markings-arabian",
+        "markings-paint-horse",
         "mane",
         "equipment",
         "coat-paint-horse"
@@ -954,6 +1015,7 @@
         "markings-lusitano",
         "markings-arabian",
         "markings-selle-francais",
+        "markings-paint-horse",
         "equipment"
       ]
     },
@@ -971,7 +1033,8 @@
         "markings-foal",
         "markings-lusitano",
         "markings-arabian",
-        "markings-selle-francais"
+        "markings-selle-francais",
+        "markings-paint-horse"
       ]
     },
     {

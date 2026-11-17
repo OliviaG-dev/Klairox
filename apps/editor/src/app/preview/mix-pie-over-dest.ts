@@ -6,13 +6,29 @@ const PIE_WHITE_G = 207;
 const PIE_WHITE_B = 200;
 const PIE_WHITE_L = 205.4;
 
+const STOCK_WHITE_R = 249;
+const STOCK_WHITE_G = 231;
+const STOCK_WHITE_B = 221;
+const STOCK_WHITE_L = 234;
+
 const PIE_MATCH = 0.88;
+const STOCK_MATCH = 0.28;
 const SHADE_SPAN_HI = 10;
 const SHADE_SPAN_LO = 30;
 const SHADE_SOFT = 50;
 
+export type WhiteMixProfile = 'clay' | 'stocking';
+
+export function whiteMixProfile(layerId: string): WhiteMixProfile {
+  return layerId === 'pie-paint-horse' || layerId === 'markings-paint-horse'
+    ? 'stocking'
+    : 'clay';
+}
+
 export function isPieOverlayLayer(layerId: string): boolean {
-  return layerId === 'pie' || layerId === 'pie-foal';
+  return (
+    layerId === 'pie' || layerId === 'pie-foal' || layerId === 'pie-paint-horse'
+  );
 }
 
 export function isMarkingOverlayLayer(layerId: string): boolean {
@@ -54,6 +70,7 @@ export function liftPieWhite(
   r: number,
   g: number,
   b: number,
+  profile: WhiteMixProfile = 'clay',
 ): [number, number, number] {
   if (isEyeTissue(r, g, b)) {
     return [r, g, b];
@@ -64,19 +81,25 @@ export function liftPieWhite(
     return [r, g, b];
   }
 
-  const delta = L - PIE_WHITE_L;
+  const mid = profile === 'stocking' ? STOCK_WHITE_L : PIE_WHITE_L;
+  const match = profile === 'stocking' ? STOCK_MATCH : PIE_MATCH;
+  const white =
+    profile === 'stocking'
+      ? [STOCK_WHITE_R, STOCK_WHITE_G, STOCK_WHITE_B]
+      : [PIE_WHITE_R, PIE_WHITE_G, PIE_WHITE_B];
+  const delta = L - mid;
   const span = delta >= 0 ? SHADE_SPAN_HI : SHADE_SPAN_LO;
-  const targetL = PIE_WHITE_L + Math.tanh(delta / SHADE_SOFT) * span;
+  const targetL = mid + Math.tanh(delta / SHADE_SOFT) * span;
 
   const scale = L > 1e-6 ? targetL / L : 1;
   let nr = r * scale;
   let ng = g * scale;
   let nb = b * scale;
 
-  const pieScale = targetL / PIE_WHITE_L;
-  nr = nr * (1 - PIE_MATCH) + PIE_WHITE_R * pieScale * PIE_MATCH;
-  ng = ng * (1 - PIE_MATCH) + PIE_WHITE_G * pieScale * PIE_MATCH;
-  nb = nb * (1 - PIE_MATCH) + PIE_WHITE_B * pieScale * PIE_MATCH;
+  const pieScale = targetL / mid;
+  nr = nr * (1 - match) + white[0] * pieScale * match;
+  ng = ng * (1 - match) + white[1] * pieScale * match;
+  nb = nb * (1 - match) + white[2] * pieScale * match;
   nb = Math.min(nb, Math.max(nr, ng) * 0.985);
 
   return [
@@ -86,15 +109,24 @@ export function liftPieWhite(
   ];
 }
 
-export function coatFormShade(r: number, g: number, b: number): number {
+export function coatFormShade(
+  r: number,
+  g: number,
+  b: number,
+  profile: WhiteMixProfile = 'clay',
+): number {
   const dL = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   const t = Math.min(1, Math.max(0, (dL - 16) / 170));
+  if (profile === 'stocking') {
+    return 0.94 + t * 0.08;
+  }
   return 0.78 + t * 0.3;
 }
 
 export function mixPieOverDest(
   dest: Uint8ClampedArray | Uint8Array,
   src: Uint8ClampedArray | Uint8Array,
+  profile: WhiteMixProfile = 'clay',
 ): void {
   const n = Math.min(dest.length, src.length);
   for (let i = 0; i < n; i += 4) {
@@ -106,10 +138,12 @@ export function mixPieOverDest(
     const sgIn = src[i + 1];
     const sbIn = src[i + 2];
     const eye = isEyeTissue(srIn, sgIn, sbIn);
-    const [sr0, sg0, sb0] = liftPieWhite(srIn, sgIn, sbIn);
+    const [sr0, sg0, sb0] = liftPieWhite(srIn, sgIn, sbIn, profile);
     const da = dest[i + 3];
     if (da > DEST_COVERED) {
-      const shade = eye ? 1 : coatFormShade(dest[i], dest[i + 1], dest[i + 2]);
+      const shade = eye
+        ? 1
+        : coatFormShade(dest[i], dest[i + 1], dest[i + 2], profile);
       const sr = Math.min(255, sr0 * shade);
       const sg = Math.min(255, sg0 * shade);
       const sb = Math.min(255, sb0 * shade);

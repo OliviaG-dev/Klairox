@@ -474,6 +474,21 @@
       ]
     },
     {
+      "id": "pie-paint-horse",
+      "title": "Pie",
+      "order": 25,
+      "dependsOn": ["coat-paint-horse"],
+      "opacity": 1,
+      "blendMode": "normal",
+      "options": [
+        {
+          "id": "tobiano",
+          "title": "Tobiano",
+          "asset": "layers/pie-paint-horse/tobiano.png"
+        }
+      ]
+    },
+    {
       "id": "markings",
       "title": "Face markings",
       "order": 30,
@@ -879,6 +894,7 @@
         "coat-foal",
         "pie",
         "pie-foal",
+        "pie-paint-horse",
         "markings",
         "markings-foal",
         "markings-arabian",
@@ -901,6 +917,7 @@
         "coat-lusitano",
         "pie",
         "pie-foal",
+        "pie-paint-horse",
         "markings",
         "markings-foal",
         "markings-lusitano",
@@ -929,6 +946,7 @@
         "coat-arabian",
         "pie",
         "pie-foal",
+        "pie-paint-horse",
         "markings",
         "markings-foal",
         "markings-lusitano",
@@ -1011,6 +1029,7 @@
       "when": { "body": "foal" },
       "hide": [
         "pie",
+        "pie-paint-horse",
         "markings",
         "markings-lusitano",
         "markings-arabian",
@@ -1023,7 +1042,7 @@
       "id": "standard-hides-foal-pie",
       "description": "Adult pie overlays are used for the standard build",
       "when": { "body": "standard" },
-      "hide": ["pie-foal"]
+      "hide": ["pie-foal", "pie-paint-horse"]
     },
     {
       "id": "standard-hides-foal-markings",

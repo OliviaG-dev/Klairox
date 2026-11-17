@@ -4,6 +4,7 @@ import {
   applyCoatSheen,
   isWhiteOverlayLayer,
   mixPieOverDest,
+  whiteMixProfile,
   type Renderer,
   type RenderLayer,
   type RenderRequest,
@@ -162,7 +163,7 @@ async function mixPieLayer(
   }
 
   const destPixels = new Uint8ClampedArray(dest.data);
-  mixPieOverDest(destPixels, full);
+  mixPieOverDest(destPixels, full, whiteMixProfile(layer.layerId ?? ''));
   return sharp(Buffer.from(destPixels), {
     raw: {
       width: destWidth,

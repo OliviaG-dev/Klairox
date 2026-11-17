@@ -1054,6 +1054,12 @@
       "hide": ["markings-foal"]
     },
     {
+      "id": "paint-horse-grey-disables-bald",
+      "description": "The grey Paint Horse head does not match the shared bald face, so that marking stays inactive",
+      "when": { "coat-paint-horse": "grey" },
+      "disable": ["markings-paint-horse:bald"]
+    },
+    {
       "id": "armor-hides-markings",
       "description": "Plate armour covers the head, so face markings are not rendered",
       "when": { "equipment": "armor" },

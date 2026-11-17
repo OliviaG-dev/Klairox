@@ -161,7 +161,11 @@ function buildJobs() {
     'cream',
   ];
   for (const coat of PAINT_COATS) {
-    for (const marking of MARKING_CHOICES) {
+    const markings =
+      coat === 'grey'
+        ? MARKING_CHOICES.filter((marking) => marking !== 'bald')
+        : MARKING_CHOICES;
+    for (const marking of markings) {
       const markId = marking ?? 'none';
       const name = `stalloria-paint-horse-${coat}-pie-none-mark-${markId}`;
       /** @type {Record<string, string>} */

@@ -54,7 +54,7 @@ describe('loadPlugin', () => {
 
     expect(plugin.manifest.name).toBe('horse');
     expect(plugin.manifest.layers).toHaveLength(17);
-    expect(plugin.manifest.constraints).toHaveLength(19);
+    expect(plugin.manifest.constraints).toHaveLength(20);
     expect(plugin.index.layers.get('markings')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('markings-foal')?.options).toHaveLength(10);
     expect(plugin.index.layers.get('markings-lusitano')?.options).toHaveLength(

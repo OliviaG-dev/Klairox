@@ -260,10 +260,19 @@ function snipCoverage(x, y, cx = 740, cy = 168) {
 }
 
 function starSnipCoverage(x, y) {
-  const cx = 740;
-  const cy = 168;
-  const d = Math.hypot((x - cx) / 13, (y - cy) / 16);
-  const top = y < 120 ? 0 : 1 - smoothstep(0.75, 1.05, d);
+  const cx = 738;
+  const cy = 166;
+  const dx = x - cx;
+  const dy = y - cy;
+  const ang = Math.atan2(dy, dx);
+  const lobe =
+    0.78 +
+    Math.sin(ang * 3 + 0.6) * 0.16 +
+    Math.sin(ang * 5 - 1.1) * 0.1 +
+    (fbm(Math.cos(ang) * 1.6 + 2.2, Math.sin(ang) * 1.6) - 0.5) * 0.28;
+  const d = Math.hypot(dx / 15, (dy - 1) / 13);
+  const grain = (fbm(x * 0.45, y * 0.45) - 0.5) * 0.16;
+  const top = y < 118 ? 0 : 1 - smoothstep(lobe - 0.08, lobe + 0.2, d + grain);
   return Math.max(top, snipCoverage(x, y, 746, 312));
 }
 

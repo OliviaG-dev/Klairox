@@ -12,7 +12,10 @@ const STOCK_WHITE_B = 221;
 const STOCK_WHITE_L = 234;
 
 const PIE_MATCH = 0.88;
-const STOCK_MATCH = 0.28;
+/** Pull hard toward stocking cream so bay-baked gray hair does not survive. */
+const STOCK_MATCH = 0.65;
+/** Floor for paint-horse whites. Bay form shading bottoms out near gray 110. */
+const STOCK_L_FLOOR = 208;
 const SHADE_SPAN_HI = 10;
 const SHADE_SPAN_LO = 30;
 const SHADE_SOFT = 50;
@@ -89,7 +92,10 @@ export function liftPieWhite(
       : [PIE_WHITE_R, PIE_WHITE_G, PIE_WHITE_B];
   const delta = L - mid;
   const span = delta >= 0 ? SHADE_SPAN_HI : SHADE_SPAN_LO;
-  const targetL = mid + Math.tanh(delta / SHADE_SOFT) * span;
+  let targetL = mid + Math.tanh(delta / SHADE_SOFT) * span;
+  if (profile === 'stocking') {
+    targetL = Math.max(targetL, STOCK_L_FLOOR);
+  }
 
   const scale = L > 1e-6 ? targetL / L : 1;
   let nr = r * scale;

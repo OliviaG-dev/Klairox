@@ -86,6 +86,9 @@ describe('mixPieOverDest', () => {
     const clay = liftPieWhite(236, 230, 222, 'clay');
     expect(luma(...stocking)).toBeGreaterThan(luma(...clay) + 20);
     expect(stocking[0]).toBeGreaterThanOrEqual(240);
+    const bakedGray = liftPieWhite(110, 106, 102, 'stocking');
+    expect(luma(...bakedGray)).toBeGreaterThan(190);
+    expect(bakedGray[0] - bakedGray[2]).toBeGreaterThan(8);
     const dest = px(120, 64, 32, 255);
     const src = px(236, 230, 222, 255);
     mixPieOverDest(dest, src, 'stocking');
